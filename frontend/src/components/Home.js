@@ -100,8 +100,8 @@ const Home = () => {
                       ? event.description.substring(0, 100) + (event.description.length > 100 ? '...' : '') 
                       : 'No description provided.'}
                   </Card.Text>
-                  <Link to={`/events/${event._id}`}>
-                    <Button variant="outline-danger">View Details</Button>
+                  <Link to={`/event/${event._id}`}>
+                    <Button variant="primary">View Details</Button>
                   </Link>
                 </Card.Body>
               </Card>

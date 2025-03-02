@@ -3,13 +3,20 @@ import { Navbar, Nav, Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 const NavigationBar = () => {
+  // Logo fallback handler
+  const handleLogoError = (e) => {
+    e.target.onerror = null;
+    e.target.src = 'https://via.placeholder.com/30x30?text=LN';
+  };
+
   return (
     <>
       <div className="brand-header" style={{ backgroundColor: '#FF4D4D' }}>
         <img 
           src="/assets/walking-logo.svg" 
           alt="LinkedIn Networker Logo" 
-          className="event-connect-logo" 
+          className="event-connect-logo"
+          onError={handleLogoError}
         />
         LINKEDIN NETWORKER
       </div>
@@ -19,7 +26,9 @@ const NavigationBar = () => {
             <img 
               src="/assets/walking-logo.svg" 
               alt="LinkedIn Networker Logo" 
-              className="logo-small" 
+              className="logo-small"
+              style={{ width: '30px', marginRight: '10px' }}
+              onError={handleLogoError}
             />
             <span className="logo-text">LinkedIn Networker</span>
           </Navbar.Brand>
