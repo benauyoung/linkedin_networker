@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const logger = require('./logger');
 
 // Configurable email templates
 const emailTemplates = {
@@ -84,7 +85,7 @@ class EmailService {
         this.defaultFrom = process.env.EMAIL_FROM || process.env.EMAIL_USER;
         this.isTestAccount = false;
         
-        console.log(`Email service initialized with ${process.env.EMAIL_HOST}`);
+        logger.info(`Email service initialized with ${process.env.EMAIL_HOST}`);
       } else {
         // Development: Use Ethereal for testing
         this.testAccount = await nodemailer.createTestAccount();
@@ -101,15 +102,59 @@ class EmailService {
         this.defaultFrom = `EVENT CONNECT <${this.testAccount.user}>`;
         this.isTestAccount = true;
         
-        console.log('Email service initialized with test account');
-        console.log(`Test email account: ${this.testAccount.user}`);
+        logger.info('Email service initialized with test account');
+        logger.debug(`Test email account: ${this.testAccount.user}`);
       }
       
       return true;
     } catch (error) {
-      console.error('Failed to initialize email service:', error);
+      logger.error('Failed to initialize email service', error);
       return false;
     }
+  }
+
+  // Method to send a follow-up email to a single attendee
+  async sendFollowUpEmail(attendee, event) {
+    if (!this.transporter) {
+      await this.initialize();
+    }
+    
+    if (!attendee || !attendee.email) {
+      throw new Error('Invalid attendee data: email is required');
+    }
+    
+    if (!event || !event.name) {
+      throw new Error('Invalid event data: event name is required');
+    }
+    
+    const template = emailTemplates.followUp(event, attendee);
+    
+    const mailOptions = {
+      from: this.defaultFrom,
+      to: attendee.email,
+      subject: template.subject,
+      text: template.text,
+      html: template.html
+    };
+    
+    const info = await this.transporter.sendMail(mailOptions);
+    
+    // Log the result and return preview URL for test accounts
+    if (this.isTestAccount) {
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      logger.info(`Test email sent to ${attendee.email}`, { previewUrl });
+      return {
+        success: true,
+        previewUrl,
+        messageId: info.messageId
+      };
+    }
+    
+    logger.info(`Email sent to ${attendee.email}`, { messageId: info.messageId });
+    return {
+      success: true,
+      messageId: info.messageId
+    };
   }
 
   async sendEventFollowUpEmails(event, attendees) {
@@ -120,13 +165,13 @@ class EmailService {
     if (!Array.isArray(attendees) || attendees.length === 0) {
       // If no real attendees, create test data in development mode
       if (this.isTestAccount) {
-        console.log('Created test attendees for demonstration');
+        logger.info('Created test attendees for demonstration');
         attendees = [
           { email: 'test1@example.com', name: 'Test User 1' },
           { email: 'test2@example.com', name: 'Test User 2' }
         ];
       } else {
-        console.warn('No attendees found for event follow-up emails');
+        logger.warn('No attendees found for event follow-up emails');
         return { success: false, error: 'No attendees found' };
       }
     }
@@ -135,37 +180,20 @@ class EmailService {
     
     for (const attendee of attendees) {
       if (!attendee.email) {
-        console.warn('Skipping attendee without email address');
+        logger.warn('Skipping attendee without email address');
         continue;
       }
       
       try {
-        const template = emailTemplates.followUp(event, attendee);
-        
-        const mailOptions = {
-          from: this.defaultFrom,
-          to: attendee.email,
-          subject: template.subject,
-          text: template.text,
-          html: template.html
-        };
-        
-        const info = await this.transporter.sendMail(mailOptions);
-        
-        console.log(`Email sent to ${attendee.email}`);
-        
-        // For test accounts, show the preview URL
-        if (this.isTestAccount) {
-          console.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
-        }
-        
+        const result = await this.sendFollowUpEmail(attendee, event);
         results.push({
           attendee: attendee.email,
           success: true,
-          messageId: info.messageId
+          messageId: result.messageId,
+          previewUrl: result.previewUrl
         });
       } catch (error) {
-        console.error(`Failed to send email to ${attendee.email}:`, error);
+        logger.error(`Failed to send email to ${attendee.email}`, error);
         
         results.push({
           attendee: attendee.email,
@@ -193,7 +221,7 @@ class EmailService {
       const verification = await this.transporter.verify();
       return { success: verification, isTestAccount: this.isTestAccount };
     } catch (error) {
-      console.error('SMTP verification failed:', error);
+      logger.error('SMTP verification failed', error);
       return { success: false, error: error.message };
     }
   }
@@ -226,20 +254,22 @@ class EmailService {
       
       // For test accounts, show the preview URL
       if (this.isTestAccount) {
-        console.log(`Test email sent to ${to}`);
-        console.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
+        logger.info(`Test email sent to ${to}`);
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        logger.info(`Preview URL: ${previewUrl}`);
         return {
           success: true,
-          previewUrl: nodemailer.getTestMessageUrl(info)
+          previewUrl
         };
       }
       
+      logger.info(`Test email sent to ${to}`, { messageId: info.messageId });
       return {
         success: true,
         messageId: info.messageId
       };
     } catch (error) {
-      console.error('Failed to send test email:', error);
+      logger.error('Failed to send test email', error);
       return {
         success: false,
         error: error.message
@@ -248,6 +278,4 @@ class EmailService {
   }
 }
 
-// Create and export a singleton instance
-const emailService = new EmailService();
-module.exports = emailService;
+module.exports = EmailService;
