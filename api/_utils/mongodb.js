@@ -164,7 +164,7 @@ async function disconnectFromMongoDB() {
 }
 
 module.exports = {
-  connectToMongoDB,
+  connectToDatabase: connectToMongoDB,
   disconnectFromMongoDB,
   EventSchema,
   AttendeeSchema

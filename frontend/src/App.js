@@ -61,7 +61,7 @@ function App() {
     // Check server connectivity
     const checkConnection = async () => {
       try {
-        await axios.get('/events');
+        await axios.get('/api/events');
         setDemoMode(false);
         setConnectionError(false);
       } catch (error) {
