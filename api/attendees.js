@@ -45,7 +45,14 @@ module.exports = async (req, res) => {
         }
         
         // Check if the event exists - try to find by _id first, then by eventCode
-        let event = await Event.findById(eventId).catch(() => null);
+        let event = null;
+        
+        try {
+          // Try to find by MongoDB ID
+          event = await Event.findById(eventId).catch(() => null);
+        } catch (err) {
+          console.log('Not a valid MongoDB ID, trying eventCode...');
+        }
         
         // If not found by _id, try to find by eventCode
         if (!event) {
@@ -53,8 +60,10 @@ module.exports = async (req, res) => {
         }
         
         if (!event) {
-          return res.status(404).json({ error: 'Event not found' });
+          return res.status(404).json({ error: 'Event not found', eventId });
         }
+        
+        console.log('Found event for registration:', event.name, event._id);
         
         // Use the eventCode as the eventId for consistency
         const eventCode = event.eventCode;

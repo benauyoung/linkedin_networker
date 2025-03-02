@@ -22,8 +22,13 @@ const RegistrationForm = () => {
     const fetchEvent = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`/events?code=${eventCode}`);
-        setEvent(response.data);
+        const response = await axios.get(`/events?id=${eventCode}`);
+        if (response.data) {
+          console.log('Event found for registration:', response.data);
+          setEvent(response.data);
+        } else {
+          setError('Event not found.');
+        }
         setLoading(false);
       } catch (err) {
         setError('Failed to load event details.');
@@ -62,14 +67,21 @@ const RegistrationForm = () => {
     }
 
     try {
+      console.log('Submitting registration with data:', {
+        ...formData,
+        eventId: event._id || event.eventCode
+      });
+      
       await axios.post('/attendees', {
         ...formData,
-        eventId: event._id
+        eventId: event._id || event.eventCode
       });
+      
       setSuccess(true);
       setSubmitting(false);
+      
       setTimeout(() => {
-        navigate(`/event/${event._id}`);
+        navigate('/');
       }, 2000);
     } catch (err) {
       setSubmitting(false);

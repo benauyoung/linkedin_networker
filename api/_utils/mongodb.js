@@ -18,7 +18,8 @@ const EventSchema = new mongoose.Schema({
   eventCode: { 
     type: String, 
     default: () => 'EVT' + Math.random().toString(36).substring(2, 8).toUpperCase(),
-    unique: true 
+    unique: true,
+    index: true 
   },
   qrCodeUrl: { type: String },
   isCompleted: { type: Boolean, default: false },
@@ -29,7 +30,7 @@ const AttendeeSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: false },
   linkedinUrl: { type: String },
-  eventId: { type: String, required: true },
+  eventId: { type: String, required: true, index: true },
   registeredAt: { type: Date, default: Date.now },
   checkedIn: { type: Boolean, default: false },
   checkedInAt: Date

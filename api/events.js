@@ -41,15 +41,19 @@ export default async function handler(req, res) {
       if (id) {
         // Get specific event by ID
         try {
-          const event = await Event.findById(id);
+          // First try to find the event by MongoDB ID
+          let event = await Event.findById(id).catch(() => null);
+          
+          // If not found by ID, try finding by eventCode 
           if (!event) {
-            // If not found by ID, try finding by eventCode 
-            const eventByCode = await Event.findOne({ eventCode: id });
-            if (eventByCode) {
-              return res.status(200).json(eventByCode);
-            }
+            event = await Event.findOne({ eventCode: id });
+          }
+          
+          if (!event) {
             return res.status(404).json({ error: 'Event not found' });
           }
+          
+          console.log('Event found:', event);
           return res.status(200).json(event);
         } catch (err) {
           console.error('Error finding event by ID:', err);
