@@ -33,15 +33,17 @@ const instance = axios.create({
 // Add a request interceptor
 instance.interceptors.request.use(
   (config) => {
-    // Add /api prefix to all requests if not already present
-    if (!config.url.startsWith('/api/') && !config.url.startsWith('http')) {
+    // On Vercel, we should NOT add the /api prefix as we've defined direct routes in vercel.json
+    const isVercel = window.location.hostname.includes('vercel.app');
+    
+    // Only add /api prefix for non-Vercel environments
+    if (!isVercel && !config.url.startsWith('/api/') && !config.url.startsWith('http')) {
       config.url = `/api${config.url.startsWith('/') ? config.url : `/${config.url}`}`;
     }
     
-    // Log only in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('API Request:', config.method.toUpperCase(), config.url);
-    }
+    // Log requests in all environments to help with debugging
+    console.log('API Request:', config.method.toUpperCase(), config.url, 'isVercel:', isVercel);
+    
     return config;
   },
   (error) => {
@@ -53,6 +55,7 @@ instance.interceptors.request.use(
 // Add a response interceptor
 instance.interceptors.response.use(
   (response) => {
+    console.log('API Response received:', response.config.url, response.status);
     return response;
   },
   (error) => {
