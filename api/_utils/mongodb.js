@@ -71,19 +71,18 @@ export async function connectToDatabase() {
         await mongoose.disconnect();
       }
       
-      // Try to connect to MongoDB Atlas first with a timeout
+      // First try to connect to MongoDB Atlas if URI is provided
       if (process.env.MONGODB_URI) {
         console.log('Connecting to MongoDB Atlas...');
         
         try {
-          // Use a timeout to avoid hanging
+          // Use a timeout to avoid hanging on serverless functions
           await Promise.race([
             mongoose.connect(process.env.MONGODB_URI, {
               useNewUrlParser: true,
               useUnifiedTopology: true,
               serverSelectionTimeoutMS: 5000, // 5 second timeout for server selection
-              socketTimeoutMS: 45000, // 45 second timeout for socket operations
-              family: 4 // Force IPv4
+              socketTimeoutMS: 30000, // 30 second timeout for socket operations
             }),
             timeoutPromise(10000) // 10 second overall timeout
           ]);
@@ -99,37 +98,39 @@ export async function connectToDatabase() {
           return { db: cachedDb, Event, Attendee };
         } catch (atlasError) {
           console.error('Error connecting to MongoDB Atlas:', atlasError);
-          throw atlasError;
+          console.log('Falling back to in-memory MongoDB...');
+          // Fall through to in-memory option
         }
       } else {
-        // If no MongoDB URI, use in-memory MongoDB
         console.log('No MongoDB URI found, using in-memory MongoDB...');
-        
-        try {
-          // Create in-memory MongoDB server
-          if (!mongoMemoryServer) {
-            mongoMemoryServer = await MongoMemoryServer.create();
-          }
-          const uri = mongoMemoryServer.getUri();
-          
-          await mongoose.connect(uri, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-          });
-          
-          cachedDb = mongoose.connection.db;
-          console.log('Connected to in-memory MongoDB');
-          
-          // Create models
-          const Event = mongoose.models.Event || mongoose.model('Event', EventSchema);
-          const Attendee = mongoose.models.Attendee || mongoose.model('Attendee', AttendeeSchema);
-          
-          isConnecting = false;
-          return { db: cachedDb, Event, Attendee };
-        } catch (memoryError) {
-          console.error('Error connecting to in-memory MongoDB:', memoryError);
-          throw memoryError;
+      }
+      
+      // Fallback to in-memory MongoDB
+      try {
+        // Create in-memory MongoDB server if it doesn't exist
+        if (!mongoMemoryServer) {
+          mongoMemoryServer = await MongoMemoryServer.create();
         }
+        
+        const uri = mongoMemoryServer.getUri();
+        
+        await mongoose.connect(uri, {
+          useNewUrlParser: true,
+          useUnifiedTopology: true
+        });
+        
+        cachedDb = mongoose.connection.db;
+        console.log('Connected to in-memory MongoDB');
+        
+        // Create models if they don't exist
+        const Event = mongoose.models.Event || mongoose.model('Event', EventSchema);
+        const Attendee = mongoose.models.Attendee || mongoose.model('Attendee', AttendeeSchema);
+        
+        isConnecting = false;
+        return { db: cachedDb, Event, Attendee };
+      } catch (memoryError) {
+        console.error('Error connecting to in-memory MongoDB:', memoryError);
+        throw memoryError;
       }
     } catch (error) {
       isConnecting = false;
