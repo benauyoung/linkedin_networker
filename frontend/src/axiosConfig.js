@@ -10,7 +10,7 @@ const getBaseUrl = () => {
   
   // For local development 
   if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:5000';
+    return 'http://localhost:3500';
   }
   
   // Default case - use the environment variable if defined
@@ -33,6 +33,11 @@ const instance = axios.create({
 // Add a request interceptor
 instance.interceptors.request.use(
   (config) => {
+    // Add /api prefix to all requests if not already present
+    if (!config.url.startsWith('/api/') && !config.url.startsWith('http')) {
+      config.url = `/api${config.url.startsWith('/') ? config.url : `/${config.url}`}`;
+    }
+    
     // Log only in development
     if (process.env.NODE_ENV === 'development') {
       console.log('API Request:', config.method.toUpperCase(), config.url);

@@ -31,29 +31,36 @@ const CreateEvent = () => {
     setLoading(true);
     setError(null);
 
+    // Basic validation
+    if (!formData.name || !formData.location) {
+      setError('Please provide both event name and location');
+      setLoading(false);
+      return;
+    }
+
     // Generate event data with unique identifiers
     const eventCode = 'EVT' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    const eventId = 'evt' + Date.now();
     const eventData = {
       ...formData,
-      eventCode,
-      _id: eventId,
       date: formData.date || new Date().toISOString().split('T')[0], // Default to today if empty
-      createdAt: new Date().toISOString()
     };
 
     try {
       // Set a timeout for the API request
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
-      // Try to send to server
+      console.log('Sending event data:', eventData);
+      
+      // Try to send to server - note: axios will add the /api prefix
       const response = await axios.post('/events', eventData, { 
         signal: controller.signal
       });
       
       clearTimeout(timeoutId);
       setLoading(false);
+      
+      console.log('Event created successfully:', response.data);
       
       // If successful, navigate to the event details page with server data
       navigate(`/event/${response.data._id}`, { 
@@ -66,7 +73,7 @@ const CreateEvent = () => {
       // Check if it's a timeout error
       const errorMessage = err.name === 'AbortError' || err.code === 'ECONNABORTED'
         ? 'Request timed out. Could not connect to server.'
-        : 'Unable to connect to server. Created event in demo mode - your data will not be saved to a database.';
+        : err.response?.data?.error || 'Error creating event. Please try again.';
       
       // In case of error, generate QR code data URL for the fallback event
       try {
@@ -80,8 +87,11 @@ const CreateEvent = () => {
         // Create complete fallback event with QR code
         const fallbackEvent = {
           ...eventData,
+          _id: 'evt' + Date.now(),
+          eventCode,
           qrCodeUrl: qrCodeDataUrl,
-          isDemoEvent: true
+          isDemoEvent: true,
+          createdAt: new Date().toISOString()
         };
         
         setLoading(false);
@@ -92,7 +102,7 @@ const CreateEvent = () => {
           navigate(`/event/${fallbackEvent._id}`, { 
             state: { event: fallbackEvent, demoMode: true } 
           });
-        }, 2000);
+        }, 3000);
       } catch (qrError) {
         // If even the QR code generation fails, still provide a fallback
         setLoading(false);
@@ -157,7 +167,6 @@ const CreateEvent = () => {
                     name="date"
                     value={formData.date}
                     onChange={handleChange}
-                    required
                   />
                 </Form.Group>
               </Col>
@@ -169,7 +178,7 @@ const CreateEvent = () => {
                     name="location"
                     value={formData.location}
                     onChange={handleChange}
-                    placeholder="Enter event location"
+                    placeholder="Enter location"
                     required
                   />
                 </Form.Group>
@@ -184,7 +193,6 @@ const CreateEvent = () => {
                 value={formData.organizer}
                 onChange={handleChange}
                 placeholder="Enter your email"
-                required
               />
             </Form.Group>
 
@@ -192,20 +200,20 @@ const CreateEvent = () => {
               <Form.Label>Description (Optional)</Form.Label>
               <Form.Control
                 as="textarea"
-                rows={3}
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Enter event description"
+                rows={3}
               />
             </Form.Group>
 
-            <div className="d-grid mt-4">
-              <Button
-                variant="danger"
-                type="submit"
+            <div className="d-grid">
+              <Button 
+                type="submit" 
+                variant="danger" 
+                className="mt-3" 
                 disabled={loading}
-                className="create-event-btn"
               >
                 {loading ? (
                   <>
@@ -215,37 +223,15 @@ const CreateEvent = () => {
                       size="sm"
                       role="status"
                       aria-hidden="true"
-                      className="me-2"
                     />
-                    CREATING...
+                    <span className="ms-2">Creating Event...</span>
                   </>
-                ) : 'CREATE EVENT'}
+                ) : (
+                  'Create Event'
+                )}
               </Button>
             </div>
           </Form>
-          
-          <div className="qr-code-scan-box mt-4">
-            <div className="d-flex justify-content-end">
-              <div className="text-center">
-                <div className="scan-text">SCAN TO REGISTER</div>
-                {createdEvent ? (
-                  <QRCode 
-                    value={`${window.location.origin}/register/${createdEvent.eventCode}`}
-                    size={80}
-                    level="H"
-                    renderAs="svg"
-                  />
-                ) : (
-                  <QRCode 
-                    value="https://example.com/placeholder"
-                    size={80}
-                    level="H"
-                    renderAs="svg"
-                  />
-                )}
-              </div>
-            </div>
-          </div>
         </Card.Body>
       </Card>
     </div>

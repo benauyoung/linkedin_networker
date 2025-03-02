@@ -37,7 +37,10 @@ const AttendeeSchema = new mongoose.Schema({
 // Connect to in-memory MongoDB
 async function connectToMongoDB() {
   if (dbConnection) {
-    return { Event: dbConnection.model('Event', EventSchema) };
+    // Create models if they don't exist
+    const Event = mongoose.models.Event || mongoose.model('Event', EventSchema);
+    const Attendee = mongoose.models.Attendee || mongoose.model('Attendee', AttendeeSchema);
+    return { Event, Attendee };
   }
   
   try {
