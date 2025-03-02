@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cd frontend && npm install && cross-env DISABLE_ESLINT_PLUGIN=true CI=false npm run build",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "frontend/build",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.js" },
