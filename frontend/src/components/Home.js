@@ -14,7 +14,7 @@ const Home = () => {
       try {
         // Try to fetch from the API
         console.log('Fetching events from API...');
-        const response = await axios.get('/api/events');
+        const response = await axios.get('/events');
         console.log('Events data:', response.data);
         setEvents(response.data);
         setLoading(false);

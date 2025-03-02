@@ -52,7 +52,7 @@ const CreateEvent = () => {
       
       console.log('Sending event data:', eventData);
       
-      // Try to send to server - note: axios will add the /api prefix
+      // Try to send to server - note: axios will NOT add the /api prefix
       const response = await axios.post('/events', eventData, { 
         signal: controller.signal
       });

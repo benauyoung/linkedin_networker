@@ -62,7 +62,7 @@ const RegistrationForm = () => {
     }
 
     try {
-      await axios.post('/attendees', {
+      await axios.post('/api/attendees', {
         ...formData,
         eventId: event._id
       });
