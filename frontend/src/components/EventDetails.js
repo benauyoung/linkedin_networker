@@ -93,7 +93,7 @@ const EventDetails = () => {
     setCompletingEvent(true);
     
     try {
-      const response = await axios.post('/api/complete-event', {
+      const response = await axios.post('/complete-event', {
         eventId: event._id
       });
       
@@ -192,8 +192,11 @@ const EventDetails = () => {
                 <i className="bi bi-people me-1"></i> {attendees.length} Attendees
               </span>
               <Button 
-                as={Link} 
-                to={`/attendees/${event._id}`}
+                onClick={() => {
+                  // Open a modal or implement view functionality
+                  console.log('Viewing attendees:', attendees);
+                  alert(`${attendees.length} attendees registered for this event: ${attendees.map(a => a.name).join(', ')}`);
+                }}
                 variant="link"
                 className="p-0 ms-2"
                 style={{ color: 'var(--bs-danger)' }}

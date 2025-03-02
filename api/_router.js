@@ -1,6 +1,7 @@
 // API routing for EVENT CONNECT (Vercel Serverless Functions)
 import events from './events.js';
 import attendees from './attendees.js';
+import completeEvent from './complete-event.js';
 
 export default async function handler(req, res) {
   // Extract the API path from the URL
@@ -16,6 +17,8 @@ export default async function handler(req, res) {
       return events(req, res);
     case 'attendees':
       return attendees(req, res);
+    case 'complete-event':
+      return completeEvent(req, res);
     default:
       // 404 handler
       return res.status(404).json({ 
@@ -23,8 +26,9 @@ export default async function handler(req, res) {
         path,
         pathname,
         availableEndpoints: [
-          '/api/events',
-          '/api/attendees'
+          '/events',
+          '/attendees',
+          '/complete-event'
         ]
       });
   }
