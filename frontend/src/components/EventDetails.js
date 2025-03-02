@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Card, Button, Row, Col, Alert, Modal } from 'react-bootstrap';
+import { Card, Button, Alert, Modal } from 'react-bootstrap';
 import QRCode from 'qrcode.react';
 import axios from '../axiosConfig';
 import moment from 'moment';
@@ -70,109 +70,105 @@ const EventDetails = () => {
 
       {error && <Alert variant="danger">{error}</Alert>}
 
-      <Row>
-        <Col md={8}>
-          <Card className="mb-4">
-            <Card.Body>
-              <Card.Title>Event Details</Card.Title>
-              <Card.Text>
-                <strong>Date:</strong> {moment(event.date).format('MMMM Do, YYYY')}<br />
-                <strong>Location:</strong> {event.location}<br />
-                <strong>Organizer:</strong> {event.organizer}<br />
-                <strong>Status:</strong> {event.isCompleted ? 'Completed' : 'Active'}<br />
-                {event.description && (
-                  <><strong>Description:</strong> {event.description}</>
-                )}
-              </Card.Text>
-              
-              {!event.isCompleted ? (
-                <Button 
-                  variant="success" 
-                  onClick={() => setShowCompleteModal(true)}
-                >
-                  Mark as Completed
-                </Button>
-              ) : (
-                <div className="mt-3">
-                  <Alert variant="success">
-                    This event has been completed. 
-                    {event.emailsSent ? ' Emails have been sent to attendees.' : ' Emails are being sent to attendees.'}
-                  </Alert>
-                </div>
+      <div className="mb-4">
+        <Card className="mb-4">
+          <Card.Body>
+            <Card.Title>Event Details</Card.Title>
+            <Card.Text>
+              <strong>Date:</strong> {moment(event.date).format('MMMM Do, YYYY')}<br />
+              <strong>Location:</strong> {event.location}<br />
+              <strong>Organizer:</strong> {event.organizer}<br />
+              <strong>Status:</strong> {event.isCompleted ? 'Completed' : 'Active'}<br />
+              {event.description && (
+                <><strong>Description:</strong> {event.description}</>
               )}
-            </Card.Body>
-          </Card>
-
-          <Card>
-            <Card.Body>
-              <Card.Title>Attendees ({attendees.length})</Card.Title>
-              {attendees.length === 0 ? (
-                <Alert variant="info">No attendees have registered for this event yet.</Alert>
-              ) : (
-                <div className="mt-3">
-                  {attendees.map(attendee => (
-                    <Card key={attendee._id} className="mb-2 attendee-card">
-                      <Card.Body>
-                        <Row>
-                          <Col xs={9}>
-                            <Card.Title>{attendee.name}</Card.Title>
-                            <Card.Text>
-                              <small>{attendee.email}</small>
-                            </Card.Text>
-                          </Col>
-                          <Col xs={3} className="text-end">
-                            <a 
-                              href={attendee.linkedinUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="btn btn-sm btn-linkedin"
-                            >
-                              LinkedIn Profile
-                            </a>
-                          </Col>
-                        </Row>
-                      </Card.Body>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-
-        <Col md={4}>
-          <Card>
-            <Card.Body>
-              <Card.Title>QR Code for Registration</Card.Title>
-              <div className="qr-code-container">
-                <QRCode 
-                  value={registrationUrl} 
-                  size={200}
-                  level="H"
-                  renderAs="canvas"
-                />
-                <div className="mt-3 text-center">
-                  <p className="mb-1">Registration Link:</p>
-                  <a href={registrationUrl} target="_blank" rel="noopener noreferrer">
-                    {registrationUrl}
-                  </a>
-                </div>
+            </Card.Text>
+            
+            {!event.isCompleted ? (
+              <Button 
+                variant="success" 
+                onClick={() => setShowCompleteModal(true)}
+              >
+                Mark as Completed
+              </Button>
+            ) : (
+              <div className="mt-3">
+                <Alert variant="success">
+                  This event has been completed. 
+                  {event.emailsSent ? ' Emails have been sent to attendees.' : ' Emails are being sent to attendees.'}
+                </Alert>
               </div>
-              <div className="d-grid mt-3">
-                <Button 
-                  variant="outline-primary"
-                  onClick={() => {
-                    navigator.clipboard.writeText(registrationUrl);
-                    alert('Registration URL copied to clipboard!');
-                  }}
-                >
-                  Copy Registration URL
-                </Button>
+            )}
+          </Card.Body>
+        </Card>
+
+        <Card>
+          <Card.Body>
+            <Card.Title>Attendees ({attendees.length})</Card.Title>
+            {attendees.length === 0 ? (
+              <Alert variant="info">No attendees have registered for this event yet.</Alert>
+            ) : (
+              <div className="mt-3">
+                {attendees.map(attendee => (
+                  <Card key={attendee._id} className="mb-2 attendee-card">
+                    <Card.Body>
+                      <div>
+                        <Card.Title>{attendee.name}</Card.Title>
+                        <Card.Text>
+                          <small>{attendee.email}</small>
+                        </Card.Text>
+                      </div>
+                      <div className="text-end">
+                        <a 
+                          href={attendee.linkedinUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="btn btn-sm btn-linkedin"
+                        >
+                          LinkedIn Profile
+                        </a>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                ))}
               </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+            )}
+          </Card.Body>
+        </Card>
+      </div>
+
+      <div>
+        <Card>
+          <Card.Body>
+            <Card.Title>QR Code for Registration</Card.Title>
+            <div className="qr-code-container">
+              <QRCode 
+                value={registrationUrl} 
+                size={200}
+                level="H"
+                renderAs="canvas"
+              />
+              <div className="mt-3 text-center">
+                <p className="mb-1">Registration Link:</p>
+                <a href={registrationUrl} target="_blank" rel="noopener noreferrer">
+                  {registrationUrl}
+                </a>
+              </div>
+            </div>
+            <div className="d-grid mt-3">
+              <Button 
+                variant="outline-primary"
+                onClick={() => {
+                  navigator.clipboard.writeText(registrationUrl);
+                  alert('Registration URL copied to clipboard!');
+                }}
+              >
+                Copy Registration URL
+              </Button>
+            </div>
+          </Card.Body>
+        </Card>
+      </div>
 
       {/* Complete Event Modal */}
       <Modal show={showCompleteModal} onHide={() => setShowCompleteModal(false)}>
