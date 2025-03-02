@@ -36,13 +36,13 @@ const EventDetails = () => {
       try {
         console.log('Fetching event with ID:', id);
         // Fetch event details
-        const eventResponse = await axios.get(`/api/events/${id}`);
+        const eventResponse = await axios.get(`/events?id=${id}`);
         console.log('Event data:', eventResponse.data);
         setEvent(eventResponse.data);
         
         // Fetch attendees for this event
         try {
-          const attendeesResponse = await axios.get(`/api/attendees/${id}`);
+          const attendeesResponse = await axios.get(`/attendees?eventId=${id}`);
           setAttendees(attendeesResponse.data);
         } catch (attendeesError) {
           console.error('Error fetching attendees:', attendeesError);

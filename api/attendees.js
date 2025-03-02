@@ -1,7 +1,6 @@
-// API route for attendees
-const { connectToMongoDB } = require('./_utils/mongodb');
+import { connectToDatabase } from './_utils/mongodb.js';
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -18,7 +17,7 @@ module.exports = async (req, res) => {
   
   try {
     // Connect to the database
-    const { Attendee, Event } = await connectToMongoDB();
+    const { Attendee, Event } = await connectToDatabase();
     
     // Handle different HTTP methods
     if (req.method === 'GET') {
@@ -28,6 +27,8 @@ module.exports = async (req, res) => {
       if (!eventId) {
         return res.status(400).json({ error: 'Event ID is required' });
       }
+      
+      console.log('Fetching attendees for event:', eventId);
       
       // Return attendees for the specific event
       const attendees = await Attendee.find({ eventId }).sort({ registeredAt: -1 });
@@ -43,6 +44,8 @@ module.exports = async (req, res) => {
             requiredFields: ['name', 'eventId']
           });
         }
+        
+        console.log('Registering attendee for event:', eventId);
         
         // Check if the event exists - try to find by _id first, then by eventCode
         let event = null;
@@ -85,6 +88,8 @@ module.exports = async (req, res) => {
         });
         
         await attendee.save();
+        
+        console.log('Attendee registered successfully:', attendee.name, attendee.email);
         
         // Return success with event info
         return res.status(201).json({
