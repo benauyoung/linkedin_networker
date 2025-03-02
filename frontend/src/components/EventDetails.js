@@ -173,7 +173,7 @@ const EventDetails = () => {
                 <span className="event-code">{event.eventCode || 'CODE123'}</span>
               </div>
               <QRCode 
-                value={`https://linkedin-networker-74zawzz0f-bens-projects-6fbea0fe.vercel.app/register/${event.eventCode || 'CODE123'}`}
+                value={`${window.location.origin}/register/${event.eventCode || 'CODE123'}`}
                 size={100}
                 level="H"
                 renderAs="svg"
@@ -206,7 +206,7 @@ const EventDetails = () => {
                 variant="outline-danger"
                 className="me-2"
                 as="a"
-                href={`https://linkedin-networker-74zawzz0f-bens-projects-6fbea0fe.vercel.app/register/${event.eventCode || 'CODE123'}`}
+                href={`${window.location.origin}/register/${event.eventCode || 'CODE123'}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >

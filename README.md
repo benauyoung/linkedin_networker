@@ -1,14 +1,14 @@
-# LinkedIn Networker
+# EVENT CONNECT
 
-A full-stack web application for LinkedIn networking events with QR codes. Built with React for the frontend, Node.js with Express for the backend, and MongoDB for the database.
+A full-stack web application for professional networking events with QR codes. Built with React for the frontend, Node.js with Express for the backend, and MongoDB for the database.
 
 ## Features
 
-- **Event Creation**: Organizers can create LinkedIn networking events with name, date, and location details
+- **Event Creation**: Organizers can create professional networking events with name, date, and location details
 - **QR Code Generation**: Each event has a unique QR code for attendees to scan
 - **Registration**: Attendees scan QR codes to access a registration page
 - **Attendee Information**: Collects name, email, and LinkedIn profile from attendees
-- **Post-Event Networking**: After the event, attendees receive emails with links to connect with other attendees
+- **Post-Event Networking**: Access the list of attendees after the event for networking opportunities
 - **LinkedIn Integration**: Easily connect with individual or all attendees via LinkedIn
 - **Robust MongoDB Integration**: Optimized database connections for serverless environments with auto-fallback to in-memory database
 - **Error Handling**: Comprehensive error handling with clear user feedback and fallback mechanisms
@@ -19,14 +19,14 @@ A full-stack web application for LinkedIn networking events with QR codes. Built
 - **Backend**: Node.js, Express
 - **Database**: MongoDB (with in-memory fallback)
 - **Deployment**: Vercel Serverless Functions
-- **QR Code**: qrcode.js
-- **Email**: Nodemailer
+- **QR Code**: qrcode.react
+- **Email**: Nodemailer (Optional Configuration)
 
 ## Prerequisites
 
 - Node.js and npm installed
 - MongoDB installed and running (or MongoDB Atlas account)
-- Email account for sending emails (Gmail recommended)
+- Email account for sending emails (Optional)
 
 ## Installation and Setup
 
@@ -109,11 +109,10 @@ Detailed deployment instructions are available in the [DEPLOYMENT.md](./DEPLOYME
 
 4. **Complete the Event**:
    - After the event, mark it as completed
-   - The system automatically emails all attendees with a link to the attendee list
+   - Access the full list of attendees for networking purposes
 
 5. **Networking After the Event**:
-   - Attendees click the link in the email
-   - They can see the list of all attendees
+   - View the list of all attendees
    - Connect with individual attendees or all attendees at once via LinkedIn
 
 ## Database Architecture

@@ -1,10 +1,10 @@
-# LinkedIn Networker Architecture Documentation
+# EVENT CONNECT Architecture Documentation
 
-This document outlines the architectural design of the LinkedIn Networker application.
+This document outlines the architectural design of the EVENT CONNECT application.
 
 ## Application Overview
 
-LinkedIn Networker is a full-stack web application designed to facilitate networking at professional events through LinkedIn profile collection and sharing. The application follows a client-server architecture with a React frontend and Node.js/Express backend, using MongoDB for data persistence.
+EVENT CONNECT is a full-stack web application designed to facilitate networking at professional events through QR code registration and attendee management. The application follows a client-server architecture with a React frontend and Node.js/Express backend, using MongoDB for data persistence.
 
 ## System Architecture
 
@@ -20,9 +20,9 @@ LinkedIn Networker is a full-stack web application designed to facilitate networ
                            │
                            ▼
                     ┌─────────────┐
+                    │ Optional    │
                     │ Email       │
                     │ Service     │
-                    │ (Nodemailer)│
                     └─────────────┘
 ```
 
@@ -50,215 +50,221 @@ The frontend is built with React and follows a component-based architecture:
 │  └───────────┘  └───────────┘  └──────────┘ │
 │                                             │
 │  ┌───────────┐  ┌───────────┐  ┌──────────┐ │
-│  │CreateEvent│  │EventDetail│  │Attendee  │ │
-│  │Component  │  │Component  │  │Component │ │
+│  │EventForm  │  │EventDetail│  │Registration│ │
+│  │Component  │  │Component  │  │Component  │ │
 │  └───────────┘  └───────────┘  └──────────┘ │
 │                                             │
-│  ┌───────────┐  ┌───────────┐               │
-│  │Registration│ │ QRCode    │               │
-│  │Component  │  │Component  │               │
-│  └───────────┘  └───────────┘               │
 └─────────────────────────────────────────────┘
 ```
 
+#### Key Components
+
+1. **Navigation Component**: Provides global navigation throughout the application
+2. **Home Component**: Displays the main landing page with event cards
+3. **EventList Component**: Renders a list of all events
+4. **EventForm Component**: Handles event creation with form validation
+5. **EventDetail Component**: Shows detailed information about a specific event, including QR code
+6. **RegistrationForm Component**: Allows attendees to register for an event
+
 ### Backend Architecture
 
-The backend follows the MVC (Model-View-Controller) pattern:
+The backend is built with Node.js and Express, structured around API endpoints that serve the frontend:
 
 ```
 ┌─────────────────────────────────────────────┐
-│               Express App                   │
+│               Express Server                │
 └──────────────────┬──────────────────────────┘
                    │
        ┌───────────┴───────────┐
        ▼                       ▼
 ┌─────────────┐        ┌─────────────────┐
-│ Routes      │        │ Middleware      │
-└──────┬──────┘        └─────────────────┘
-       │
+│ API Routes  │        │ Database        │
+└──────┬──────┘        │ Connection      │
+       │               └────────┬────────┘
+       │                        │
+       │                        ▼
+       │               ┌─────────────────┐
+       │               │ In-Memory DB    │
+       │               │ Fallback        │
+       │               └─────────────────┘
        ▼
 ┌─────────────────────────────────────────────┐
-│               Controllers                   │
-├─────────────────────────────────────────────┤
-│  ┌───────────┐      ┌───────────────┐       │
-│  │EventController│  │AttendeeController│    │
-│  └───────────┘      └───────────────┘       │
 │                                             │
-│  ┌───────────┐                              │
-│  │EmailController│                          │
-│  └───────────┘                              │
-└──────────────────┬──────────────────────────┘
-                   │
-                   ▼
-┌─────────────────────────────────────────────┐
-│                 Models                      │
-├─────────────────────────────────────────────┤
-│  ┌───────────┐      ┌───────────────┐       │
-│  │EventModel │      │AttendeeModel  │       │
-│  └───────────┘      └───────────────┘       │
+│  ┌───────────┐  ┌───────────┐  ┌──────────┐ │
+│  │Event      │  │Attendee   │  │Email     │ │
+│  │Controller │  │Controller │  │Service   │ │
+│  └───────────┘  └───────────┘  └──────────┘ │
+│                                             │
 └─────────────────────────────────────────────┘
 ```
 
-## Component Breakdown
+#### API Endpoints
 
-### Frontend Components
+1. **Event Endpoints**:
+   - `GET /events`: List all events
+   - `GET /events?id=<id>`: Get an event by ID
+   - `GET /events?eventCode=<code>`: Get an event by code
+   - `POST /events`: Create a new event
+   - `POST /complete-event`: Mark an event as completed
 
-#### Core Components
-- **App**: The root component that handles routing
-- **NavigationBar**: The global navigation header
-- **Home**: Landing page with welcome message and event creation button
+2. **Attendee Endpoints**:
+   - `GET /attendees?eventId=<id>`: Get attendees for an event
+   - `POST /attendees`: Register a new attendee
 
-#### Event Management Components
-- **CreateEvent**: Form for creating new events
-- **EventList**: Displays all events
-- **EventDetail**: Shows detailed information about an event
-- **QRCode**: Generates and displays QR codes for event registration
+### Database Architecture
 
-#### Attendee Management Components
-- **RegistrationForm**: Form for attendees to register for an event
-- **AttendeeList**: Displays registered attendees for an event
-- **SuccessPage**: Confirmation page after successful registration
+The application uses MongoDB with a collection-based structure:
 
-### Backend Components
+```
+┌─────────────────────────────────────────────┐
+│              MongoDB Database               │
+└─────────────────────────────────────────────┘
+                   │
+       ┌───────────┴───────────┐
+       ▼                       ▼
+┌─────────────┐        ┌─────────────────┐
+│ Events      │        │ Attendees       │
+│ Collection  │        │ Collection      │
+└─────────────┘        └─────────────────┘
+```
 
-#### Models
-- **Event**: Schema and methods for event data
-- **Attendee**: Schema and methods for attendee data
+#### Schema Design
 
-#### Controllers
-- **EventController**: Handles CRUD operations for events
-- **AttendeeController**: Handles attendee registration and listing
-- **EmailController**: Manages email notifications
+1. **Event Schema**:
+```javascript
+{
+  name: String,              // Required
+  date: Date,                // Required
+  location: String,          // Required
+  description: String,       // Optional
+  eventCode: String,         // Unique code for event registration
+  isCompleted: Boolean,      // Whether event is completed
+  createdAt: Date            // Automatically set
+}
+```
 
-#### Routes
-- **eventRoutes**: API endpoints for event operations
-- **attendeeRoutes**: API endpoints for attendee operations
-- **emailRoutes**: API endpoints for email functionality
+2. **Attendee Schema**:
+```javascript
+{
+  name: String,              // Required
+  email: String,             // Required
+  linkedinUrl: String,       // LinkedIn profile URL
+  eventId: String,           // Reference to event (ID or code)
+  registeredAt: Date         // Automatically set
+}
+```
+
+### In-Memory Database Fallback
+
+A key architectural feature is the in-memory database fallback system:
+
+```
+┌─────────────────┐     ┌──────────────────┐
+│ MongoDB Atlas   │     │ Connection        │
+│ Connection      │────▶│ Success?         │
+└─────────────────┘     └────────┬─────────┘
+                                 │
+                     ┌───────────┴───────────┐
+                     │                       │
+                     ▼                       ▼
+          ┌─────────────────┐     ┌─────────────────┐
+          │ Use MongoDB     │     │ Fall back to    │
+          │ Atlas           │     │ in-memory       │
+          └─────────────────┘     │ MongoDB         │
+                                  └─────────────────┘
+                                          │
+                                          ▼
+                                  ┌─────────────────┐
+                                  │ Show "Demo Mode"│
+                                  │ banner to user  │
+                                  └─────────────────┘
+```
+
+This architecture provides:
+1. **Resilience**: The application can function even when the primary database is unavailable
+2. **Demo Capability**: Presentations can occur without requiring a live database connection
+3. **Development Flexibility**: Developers can work without setting up MongoDB locally
 
 ## Data Flow
 
 ### Event Creation Flow
-1. User fills out event creation form
-2. Frontend sends POST request to `/api/events`
-3. Backend validates request data
-4. New event is created in MongoDB
-5. Response with event details and ID is sent back
-6. Frontend redirects to event details page
 
-### Attendee Registration Flow
-1. Attendee scans QR code
-2. QR code opens registration page with event ID
-3. Attendee fills out registration form
-4. Frontend sends POST request to `/api/attendees`
-5. Backend validates data and checks for duplicate registrations
-6. New attendee record is created in MongoDB
-7. Response is sent back
-8. Frontend shows success message
-
-### Post-Event Networking Flow
-1. Organizer triggers email sending
-2. Backend retrieves all attendees for the event
-3. System generates networking summary
-4. Emails are sent to all attendees via Nodemailer
-5. Attendees receive LinkedIn profile links of other attendees
-
-## Database Schema
-
-### Event Collection
-```json
-{
-  "_id": "ObjectId",
-  "name": "String",
-  "date": "Date",
-  "location": "String",
-  "description": "String",
-  "organizer": "String",
-  "createdAt": "Date",
-  "updatedAt": "Date"
-}
+```
+User Input → Frontend Form → API Request → Event Controller → MongoDB → Response → UI Update with QR Code
 ```
 
-### Attendee Collection
-```json
-{
-  "_id": "ObjectId",
-  "name": "String",
-  "email": "String",
-  "linkedinUrl": "String",
-  "eventId": "ObjectId",
-  "registeredAt": "Date",
-  "updatedAt": "Date"
-}
+### Registration Flow
+
+```
+QR Code Scan → Registration Page → Form Submission → API Request → Attendee Controller → MongoDB → Confirmation Display
 ```
 
-## Technology Stack
+### Attendee Listing Flow
 
-### Frontend
-- **React**: JavaScript library for building user interfaces
-- **React Router**: For client-side routing
-- **Bootstrap**: CSS framework for responsive design
-- **Axios**: HTTP client for API requests
-- **QRCode.react**: Library for generating QR codes
+```
+Event Selection → API Request → Event Controller → MongoDB → Attendee Data → UI Display
+```
 
-### Backend
-- **Node.js**: JavaScript runtime
-- **Express**: Web framework for Node.js
-- **Mongoose**: MongoDB object modeling
-- **Nodemailer**: Module for sending emails
-- **Cors**: Middleware for handling cross-origin requests
+## QR Code Implementation
 
-### Database
-- **MongoDB**: NoSQL database
-- **MongoDB Atlas**: Cloud database service (optional)
-- **In-memory MongoDB**: Fallback for development/testing
+The QR code system is a critical component that enables the core functionality:
+
+```
+┌────────────────┐   ┌────────────────┐   ┌────────────────┐
+│ Event Creation │ → │ QR Code        │ → │ URL Generation │
+│ Completed      │   │ Generation     │   │ with Event Code│
+└────────────────┘   └────────────────┘   └────────────────┘
+                                                  │
+┌────────────────┐   ┌────────────────┐          │
+│ Registration   │ ← │ User Scans     │ ←────────┘
+│ Form Loading   │   │ QR Code        │
+└────────────────┘   └────────────────┘
+```
+
+The QR code encodes a URL that includes:
+- Base application URL
+- Registration route
+- Event code as a parameter
+
+When scanned, this directs users to the pre-populated registration form specifically for that event.
 
 ## Security Considerations
 
-1. **Data Validation**: All input is validated on both client and server sides
-2. **CORS Protection**: API configured to accept requests only from approved origins
-3. **Rate Limiting**: Prevents abuse of the API
-4. **Environment Variables**: Sensitive information stored in environment variables
-5. **Email Security**: Uses secure SMTP connection for sending emails
+1. **Data Validation**: All user inputs are validated on both client and server side
+2. **Sanitization**: Input data is sanitized to prevent injection attacks
+3. **Error Handling**: Errors are caught and handled gracefully without exposing sensitive information
+4. **Environment Variables**: Sensitive configuration is stored in environment variables
 
-## Scalability Considerations
+## Performance Optimizations
 
-1. **Database Indexing**: Indexes are set on frequently queried fields
-2. **Statelessness**: Backend is stateless for horizontal scaling
-3. **Connection Pooling**: MongoDB connections are pooled for efficiency
-4. **Caching**: Frequently accessed data can be cached
-5. **Asynchronous Processing**: Email sending is handled asynchronously
+1. **Database Connection Pooling**: Reuses database connections for better performance
+2. **Lazy Loading**: Components and routes are loaded only when needed
+3. **Optimized MongoDB Queries**: Proper indexing and query optimization
+4. **React Component Optimization**: Efficient rendering and state management
 
 ## Deployment Architecture
 
+### Vercel Deployment (Recommended)
+
 ```
-┌───────────────┐     ┌───────────────┐     ┌───────────────┐
-│ Client Device │────▶│   CDN         │────▶│  Static Files │
-└───────────────┘     └───────────────┘     └───────────────┘
-        │                                            
-        │              ┌───────────────┐              
-        └─────────────▶│ Load Balancer │              
-                       └───────┬───────┘              
-                               │                      
-                ┌──────────────┴───────────────┐     
-                ▼                              ▼      
-        ┌───────────────┐             ┌───────────────┐
-        │ API Server 1  │             │ API Server 2  │
-        └───────────────┘             └───────────────┘
-                │                              │       
-                └──────────────┬───────────────┘       
-                               ▼                       
-                       ┌───────────────┐               
-                       │  MongoDB      │               
-                       │  Atlas        │               
-                       └───────────────┘               
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│             │     │             │     │             │
+│  GitHub     │────▶│   Vercel    │────▶│  MongoDB    │
+│  Repository │     │ (Serverless)│     │  Atlas      │
+│             │     │             │     │             │
+└─────────────┘     └─────────────┘     └─────────────┘
 ```
 
-## Future Architecture Improvements
+This deployment model provides:
+1. **Serverless Architecture**: Scales automatically based on demand
+2. **Global CDN**: Low-latency access worldwide
+3. **Automatic Deployments**: CI/CD pipeline from GitHub
+4. **Environment Variable Management**: Secure storage of configuration
 
-1. **Authentication System**: Add JWT-based authentication for user accounts
-2. **Microservices**: Split backend into specialized microservices
-3. **Real-time Updates**: Implement WebSockets for live updates
-4. **Analytics Service**: Add dedicated analytics tracking
-5. **CDN Integration**: Use CDN for static assets delivery
-6. **LinkedIn API Integration**: Direct integration with LinkedIn API
-7. **Serverless Functions**: Move suitable endpoints to serverless architecture
+## Future Architectural Considerations
+
+1. **Authentication**: Adding user authentication for event creators
+2. **Caching Layer**: Redis or similar for improved performance
+3. **Microservices**: Breaking the backend into distinct microservices for better scalability
+4. **Real-time Updates**: WebSocket integration for live attendee updates
+5. **Analytics System**: Tracking event statistics and attendee engagement

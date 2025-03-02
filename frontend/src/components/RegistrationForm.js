@@ -23,11 +23,20 @@ const RegistrationForm = () => {
       setLoading(true);
       try {
         console.log('Fetching event using event code:', eventCode);
-        const response = await axios.get(`/events?eventCode=${eventCode}`);
-        if (response.data) {
+        // First try with eventCode parameter
+        let response = await axios.get(`/events?eventCode=${eventCode}`);
+        
+        // If no data returned, try with id parameter as fallback
+        if (!response.data || Object.keys(response.data).length === 0) {
+          console.log('No event found with eventCode, trying with id parameter');
+          response = await axios.get(`/events?id=${eventCode}`);
+        }
+        
+        if (response.data && Object.keys(response.data).length > 0) {
           console.log('Event found for registration:', response.data);
           setEvent(response.data);
         } else {
+          console.error('Event not found with either eventCode or id parameter');
           setError('Event not found.');
         }
         setLoading(false);

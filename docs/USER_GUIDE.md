@@ -1,181 +1,153 @@
-# LinkedIn Networker User Guide
+# EVENT CONNECT User Guide
 
-This user guide will help you understand how to use LinkedIn Networker to create and manage professional networking events.
+This comprehensive guide will help you understand how to use EVENT CONNECT to create and manage professional networking events.
 
 ## Table of Contents
 - [Getting Started](#getting-started)
-- [Creating Events](#creating-events)
+- [Creating an Event](#creating-an-event)
 - [Managing Events](#managing-events)
-- [QR Code Registration](#qr-code-registration)
-- [Attendee Registration](#attendee-registration)
-- [Post-Event Networking](#post-event-networking)
-- [Customizing Your Experience](#customizing-your-experience)
+- [Event Registration](#event-registration)
+- [Viewing Attendees](#viewing-attendees)
+- [Completing an Event](#completing-an-event)
 - [Troubleshooting](#troubleshooting)
 
 ## Getting Started
 
-### Accessing the Application
+EVENT CONNECT is a web application designed to streamline the process of organizing and managing networking events. Here's how to get started:
 
-LinkedIn Networker is a web application that you can access through your browser. 
+1. **Access the Application**:
+   - Open your web browser and navigate to [EVENT CONNECT](https://linkedin-networker-g0nohien6-bens-projects-6fbea0fe.vercel.app)
+   - No login is required to use the application
 
-1. Open your web browser (Chrome, Firefox, Safari, or Edge recommended)
-2. Navigate to the application URL (provided by your administrator)
-3. The home page displays a welcome message and options to create or view events
+2. **Main Dashboard**:
+   - When you first open the application, you'll see the home page displaying upcoming events
+   - The navigation bar at the top provides access to different sections of the application
 
-### Navigation
+## Creating an Event
 
-The main navigation bar at the top of the application contains:
+1. **Navigate to Create Event Page**:
+   - Click on the "Create Event" button in the navigation bar
 
-- **Home**: Returns to the main dashboard
-- **Create Event**: Opens the event creation form
-- **Your Events**: (If logged in) Shows your created events
+2. **Fill in Event Details**:
+   - **Event Name**: Enter a descriptive name for your event (required)
+   - **Date**: Select the date and time of your event (required)
+   - **Location**: Enter the physical or virtual location (required)
+   - **Description**: Provide additional details about your event (optional)
 
-## Creating Events
+3. **Submit the Form**:
+   - Click the "Create Event" button at the bottom of the form
+   - If successful, you'll be redirected to the event details page
 
-LinkedIn Networker makes it easy to create professional networking events:
-
-1. Click on "Create Event" in the navigation bar
-2. Fill out the event form:
-   - **Event Name**: Enter a descriptive name for your networking event
-   - **Event Date**: Select the date when the event will take place
-   - **Location**: Enter the physical location of the event
-   - **Your Email**: Provide your email (for receiving attendee information)
-   - **Description**: (Optional) Add details about the purpose and agenda
-
-3. Click the "CREATE EVENT" button to save your event
-4. You'll be redirected to the event details page with a unique QR code
+4. **Event Code and QR Code**:
+   - Each event is automatically assigned a unique event code
+   - A QR code is generated that links to the registration page for your event
+   - Attendees can scan this QR code to register for your event
 
 ## Managing Events
 
-After creating an event, you can manage it from the event details page:
+1. **View All Events**:
+   - The home page displays all your events in a card format
+   - Each card shows key information: event name, date, location, and status
 
-### Event Details Page
+2. **Event Details**:
+   - Click on an event card to view its details
+   - The details page shows all information about the event, including the QR code
 
-This page shows:
-- Event name, date, and location
-- QR code for attendee registration
-- List of registered attendees
-- Options to edit or delete the event
+3. **Event Actions**:
+   - From the event details page, you can:
+     - View the registration page
+     - View the list of attendees
+     - Complete the event
+     - Access the QR code for sharing
 
-### Editing Events
+## Event Registration
 
-To edit an event:
-1. Go to the event details page
-2. Click the "Edit" button
-3. Update the information as needed
-4. Click "Save Changes"
+1. **Registration Methods**:
+   - **QR Code**: Attendees can scan the QR code with their smartphone
+   - **Direct Link**: Alternatively, you can share the registration link directly
 
-### Deleting Events
+2. **Registration Form**:
+   - Attendees will see a registration form with your event details
+   - They need to provide:
+     - Name (required)
+     - Email (required)
+     - LinkedIn URL (optional but recommended)
 
-To delete an event:
-1. Go to the event details page
-2. Click the "Delete" button
-3. Confirm the deletion in the popup dialog
+3. **Confirmation**:
+   - After successful registration, attendees will see a confirmation message
+   - The system prevents duplicate registrations based on email addresses
 
-## QR Code Registration
+## Viewing Attendees
 
-LinkedIn Networker uses QR codes for streamlined attendee registration:
+1. **Access Attendee List**:
+   - From the event details page, click the "View List" button
+   - A modal will open showing all registered attendees
 
-### Displaying the QR Code
+2. **Attendee Information**:
+   - The list displays each attendee's name and email
+   - For privacy reasons, LinkedIn URLs are only displayed on the post-event attendee page
 
-1. From the event details page, you can:
-   - Print the QR code (using the "Print QR Code" button)
-   - Download the QR code image (using the "Download QR" button)
-   - Share the QR code directly (using the "Share" button)
+## Completing an Event
 
-2. Display this QR code at your event:
-   - On printed materials
-   - On digital screens
-   - In email invitations
+1. **Mark Event as Completed**:
+   - After your event has concluded, navigate to the event details page
+   - Click the "Complete Event" button
+   - Confirm your action in the dialog that appears
 
-### QR Code Best Practices
-
-- Ensure the QR code is large enough to be easily scanned (minimum 2x2 inches)
-- Provide good lighting for scanning
-- Include brief instructions next to the QR code
-- Test the QR code before the event
-
-## Attendee Registration
-
-Attendees can register for your event by scanning the QR code:
-
-### Registration Process
-
-1. Attendee scans the QR code with their smartphone camera
-2. Their browser opens the registration page automatically
-3. They enter their:
-   - Name
-   - Email address
-   - LinkedIn profile URL (optional but recommended)
-4. After submitting, they receive a confirmation message
-
-### Viewing Registrations
-
-As the event organizer, you can view registrations:
-1. Go to the event details page
-2. Scroll down to the "Registered Attendees" section
-3. View the list of attendees with their information
-
-## Post-Event Networking
-
-LinkedIn Networker facilitates networking after the event:
-
-### Attendee List
-
-After the event:
-1. All attendees receive an email with a link to the attendee list
-2. Attendees can view others who attended and their LinkedIn profiles
-3. They can connect with others individually or use the "Connect with All" feature
-
-### Export Options
-
-As an organizer, you can:
-1. Export the attendee list as CSV or Excel
-2. Download LinkedIn profile links
-3. Send follow-up emails through the platform
-
-## Customizing Your Experience
-
-LinkedIn Networker offers several customization options:
-
-### Application Theme
-
-You can customize the application's appearance:
-1. Red theme (default) - Matches the walking figure logo
-2. LinkedIn blue theme - Professional business appearance
-
-### Email Templates
-
-You can customize the emails sent to attendees:
-1. Go to your account settings
-2. Select "Email Templates"
-3. Edit the templates for:
-   - Registration confirmation
-   - Post-event networking
-   - Follow-up communications
+2. **Post-Completion Actions**:
+   - The event status changes to "Completed"
+   - If email functionality is enabled, a follow-up email is sent to all attendees
 
 ## Troubleshooting
 
-### Common Issues
+### QR Code Issues
 
-**QR Code Doesn't Scan**
-- Ensure adequate lighting
-- Make sure the QR code is not distorted
-- Try increasing the size of the QR code
+**Problem**: QR code not linking to the registration page
 
-**Attendee Can't Register**
-- Check internet connectivity
-- Ensure the event hasn't been deleted
-- Verify the QR code links to the correct event
+**Solution**:
+1. Make sure you're using the latest version of the application
+2. Try accessing the registration page directly by clicking the "Registration Page" button
+3. Verify that the event code is correct in the URL
+4. If using a smartphone to scan, ensure it has a reliable internet connection
 
-**Email Notifications Not Received**
-- Check spam/junk folders
-- Verify email addresses are entered correctly
-- Contact your administrator to check email settings
+### Registration Issues
 
-### Getting Support
+**Problem**: Attendees unable to register for the event
 
-If you encounter any issues using LinkedIn Networker:
-1. Check this user guide for solutions
-2. Contact your administrator for assistance
-3. Use the "Help" button in the application to access additional resources
+**Solution**:
+1. Check if the event is still active (not completed)
+2. Ensure all required fields are filled in the registration form
+3. Verify that the attendee hasn't already registered with the same email
+4. Try using a different browser or device if persistent issues occur
+
+### Demo Mode
+
+**Banner Message**: "Demo Mode Active: Unable to connect to the server. Your data will not be saved."
+
+**Explanation**:
+- This means the application couldn't connect to the MongoDB database
+- The application is running with an in-memory database as a fallback
+- All features will work, but data will not be saved when you close the browser
+- This is useful for demonstrations or when experiencing temporary database connectivity issues
+
+## Best Practices
+
+1. **Event Creation**:
+   - Create events at least a week in advance
+   - Provide detailed descriptions to help attendees understand the event purpose
+   - Include specific location details with directions if applicable
+
+2. **QR Code Distribution**:
+   - Display the QR code prominently at your event entrance
+   - Include it in pre-event emails and promotional materials
+   - Print the QR code at a sufficient size for easy scanning
+
+3. **During the Event**:
+   - Have a dedicated registration station with the QR code displayed
+   - Assist attendees who may have difficulty with the registration process
+   - Consider having a backup registration method for those without smartphones
+
+4. **After the Event**:
+   - Complete the event promptly to send follow-up emails
+   - Encourage attendees to connect with each other through the attendee list
+   - Gather feedback for future events
