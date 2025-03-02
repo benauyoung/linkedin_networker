@@ -6,13 +6,9 @@
     { "source": "/events", "destination": "/api/events" },
     { "source": "/attendees", "destination": "/api/attendees" },
     { "source": "/complete-event", "destination": "/api/complete-event" },
+    { "source": "/register/(.*)", "destination": "/index.html" },
+    { "source": "/event/(.*)", "destination": "/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "routes": [
-    { "handle": "filesystem" },
-    { "src": "/register/.*", "dest": "/index.html" },
-    { "src": "/event/.*", "dest": "/index.html" },
-    { "src": "/.*", "dest": "/index.html" }
   ],
   "env": {
     "CI": "false",
