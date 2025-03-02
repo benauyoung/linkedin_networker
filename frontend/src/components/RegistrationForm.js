@@ -15,14 +15,14 @@ const RegistrationForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  const { eventId } = useParams();
+  const { eventCode } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchEvent = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`/events/${eventId}`);
+        const response = await axios.get(`/events?code=${eventCode}`);
         setEvent(response.data);
         setLoading(false);
       } catch (err) {
@@ -33,7 +33,7 @@ const RegistrationForm = () => {
     };
 
     fetchEvent();
-  }, [eventId]);
+  }, [eventCode]);
 
   const handleChange = (e) => {
     setFormData({
@@ -64,12 +64,12 @@ const RegistrationForm = () => {
     try {
       await axios.post('/attendees', {
         ...formData,
-        eventId
+        eventId: event._id
       });
       setSuccess(true);
       setSubmitting(false);
       setTimeout(() => {
-        navigate(`/events/${eventId}/success`);
+        navigate(`/event/${event._id}`);
       }, 2000);
     } catch (err) {
       setSubmitting(false);
