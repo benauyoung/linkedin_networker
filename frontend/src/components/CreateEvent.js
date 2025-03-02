@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Form, Button, Card, Alert, Row, Col } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Form, Button, Card, Alert, Row, Col, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from '../axiosConfig';
 import QRCode from 'qrcode.react';
@@ -16,6 +16,7 @@ const CreateEvent = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [createdEvent, setCreatedEvent] = useState(null);
+  const [loadingTimeout, setLoadingTimeout] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -42,8 +43,16 @@ const CreateEvent = () => {
     };
 
     try {
+      // Set a timeout for the API request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+      
       // Try to send to server
-      const response = await axios.post('/events', eventData);
+      const response = await axios.post('/events', eventData, { 
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
       setLoading(false);
       
       // If successful, navigate to the event details page with server data
@@ -54,32 +63,58 @@ const CreateEvent = () => {
     } catch (err) {
       console.error('Error creating event:', err);
       
+      // Check if it's a timeout error
+      const errorMessage = err.name === 'AbortError' || err.code === 'ECONNABORTED'
+        ? 'Request timed out. Could not connect to server.'
+        : 'Unable to connect to server. Created event in demo mode - your data will not be saved to a database.';
+      
       // In case of error, generate QR code data URL for the fallback event
-      const registrationUrl = `${window.location.origin}/register/${eventCode}`;
-      const canvas = document.createElement('canvas');
-      await new Promise(resolve => {
-        QRCode.toCanvas(canvas, registrationUrl, { width: 200 }, resolve);
-      });
-      const qrCodeDataUrl = canvas.toDataURL();
-      
-      // Create complete fallback event with QR code
-      const fallbackEvent = {
-        ...eventData,
-        qrCodeUrl: qrCodeDataUrl,
-        isDemoEvent: true
-      };
-      
-      setLoading(false);
-      setError('Unable to connect to server. Created event in demo mode - your data will not be saved to a database.');
-      
-      // Wait a moment to show the message before redirecting
-      setTimeout(() => {
-        navigate(`/event/${fallbackEvent._id}`, { 
-          state: { event: fallbackEvent, demoMode: true } 
+      try {
+        const registrationUrl = `${window.location.origin}/register/${eventCode}`;
+        const canvas = document.createElement('canvas');
+        await new Promise(resolve => {
+          QRCode.toCanvas(canvas, registrationUrl, { width: 200 }, resolve);
         });
-      }, 2000);
+        const qrCodeDataUrl = canvas.toDataURL();
+        
+        // Create complete fallback event with QR code
+        const fallbackEvent = {
+          ...eventData,
+          qrCodeUrl: qrCodeDataUrl,
+          isDemoEvent: true
+        };
+        
+        setLoading(false);
+        setError(errorMessage);
+        
+        // Wait a moment to show the message before redirecting
+        setTimeout(() => {
+          navigate(`/event/${fallbackEvent._id}`, { 
+            state: { event: fallbackEvent, demoMode: true } 
+          });
+        }, 2000);
+      } catch (qrError) {
+        // If even the QR code generation fails, still provide a fallback
+        setLoading(false);
+        setError('Error creating event. Please try again.');
+      }
     }
   };
+
+  // Clear loading state after a timeout to prevent UI from being stuck
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        setLoading(false);
+        setError('The request is taking too long. Please try again or check your connection.');
+      }, 15000); // 15 second max loading time
+      
+      setLoadingTimeout(timer);
+      return () => clearTimeout(timer);
+    } else if (loadingTimeout) {
+      clearTimeout(loadingTimeout);
+    }
+  }, [loading]);
 
   return (
     <div>
@@ -172,7 +207,19 @@ const CreateEvent = () => {
                 disabled={loading}
                 className="create-event-btn"
               >
-                {loading ? 'CREATING...' : 'CREATE EVENT'}
+                {loading ? (
+                  <>
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                      className="me-2"
+                    />
+                    CREATING...
+                  </>
+                ) : 'CREATE EVENT'}
               </Button>
             </div>
           </Form>
