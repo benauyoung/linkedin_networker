@@ -1,0 +1,12 @@
+{
+  "name": "linkedin-networker-api",
+  "version": "1.0.0",
+  "description": "API for LinkedIn Networker App",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^6.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3"
+  }
+}

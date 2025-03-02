@@ -4,25 +4,16 @@
   "outputDirectory": "frontend/build",
   "installCommand": "npm install",
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/"
-    }
+    { "source": "/api/(.*)", "destination": "/api" }
   ],
-  "functions": {
-    "api": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  },
-  "build": {
-    "env": {
-      "CI": "false",
-      "DISABLE_ESLINT_PLUGIN": "true"
-    }
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api" },
+    { "src": "/(.*)", "dest": "/frontend/build/$1" }
+  ],
+  "env": {
+    "CI": "false",
+    "DISABLE_ESLINT_PLUGIN": "true",
+    "NODE_ENV": "production",
+    "MONGODB_URI": "mongodb+srv://USERNAME:PASSWORD@cluster0.mongodb.net/linkedin-networker"
   }
 }
