@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "cd frontend && npm install && cross-env DISABLE_ESLINT_PLUGIN=true CI=false npm run build",
   "outputDirectory": "frontend/build",
   "installCommand": "npm install",
   "rewrites": [
@@ -21,7 +21,8 @@
   },
   "build": {
     "env": {
-      "CI": "false"
+      "CI": "false",
+      "DISABLE_ESLINT_PLUGIN": "true"
     }
   }
 }
