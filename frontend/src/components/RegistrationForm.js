@@ -62,7 +62,7 @@ const RegistrationForm = () => {
     }
 
     try {
-      await axios.post('/api/attendees', {
+      await axios.post('/attendees', {
         ...formData,
         eventId: event._id
       });
@@ -125,14 +125,13 @@ const RegistrationForm = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label className="text-danger">Email Address</Form.Label>
+              <Form.Label className="text-danger">Email Address (Optional)</Form.Label>
               <Form.Control
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="Enter your email"
-                required
                 disabled={submitting || success}
               />
               <Form.Text className="text-muted">

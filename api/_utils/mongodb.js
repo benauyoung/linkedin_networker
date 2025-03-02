@@ -27,7 +27,7 @@ const EventSchema = new mongoose.Schema({
 
 const AttendeeSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true },
+  email: { type: String, required: false },
   linkedinUrl: { type: String },
   eventId: { type: String, required: true },
   registeredAt: { type: Date, default: Date.now },

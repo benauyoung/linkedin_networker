@@ -37,10 +37,10 @@ module.exports = async (req, res) => {
         const { name, email, linkedinUrl, eventId } = req.body;
         
         // Validate required fields
-        if (!name || !email || !eventId) {
+        if (!name || !eventId) {
           return res.status(400).json({ 
             error: 'Missing required fields',
-            requiredFields: ['name', 'email', 'eventId']
+            requiredFields: ['name', 'eventId']
           });
         }
         
@@ -60,15 +60,17 @@ module.exports = async (req, res) => {
         const eventCode = event.eventCode;
         
         // Check if the attendee is already registered for this event
-        const existingAttendee = await Attendee.findOne({ email, eventId: eventCode });
-        if (existingAttendee) {
-          return res.status(400).json({ error: 'You have already registered for this event' });
+        if (email) {
+          const existingAttendee = await Attendee.findOne({ email, eventId: eventCode });
+          if (existingAttendee) {
+            return res.status(400).json({ error: 'You have already registered for this event' });
+          }
         }
         
         // Create new attendee document
         const attendee = new Attendee({
           name,
-          email,
+          email: email || '',
           linkedinUrl: linkedinUrl || '', // Optional field
           eventId: eventCode // Use eventCode for consistency
         });

@@ -43,6 +43,11 @@ export default async function handler(req, res) {
         try {
           const event = await Event.findById(id);
           if (!event) {
+            // If not found by ID, try finding by eventCode 
+            const eventByCode = await Event.findOne({ eventCode: id });
+            if (eventByCode) {
+              return res.status(200).json(eventByCode);
+            }
             return res.status(404).json({ error: 'Event not found' });
           }
           return res.status(200).json(event);
