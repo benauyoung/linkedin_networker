@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navbar, Nav, Container } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import logo from '../assets/logo.svg';
 
 const NavigationBar = () => {
   // Logo fallback handler
@@ -13,7 +14,7 @@ const NavigationBar = () => {
     <>
       <div className="brand-header">
         <img 
-          src="/assets/walking-logo.svg" 
+          src={logo} 
           alt="EVENT CONNECT Logo" 
           className="event-connect-logo"
           onError={handleLogoError}
@@ -24,7 +25,7 @@ const NavigationBar = () => {
         <Container>
           <Navbar.Brand as={Link} to="/">
             <img 
-              src="/assets/walking-logo.svg" 
+              src={logo} 
               alt="EVENT CONNECT Logo" 
               className="d-inline-block align-top"
               style={{ width: '30px', marginRight: '10px' }}
