@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Button, Card, Alert, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../axiosConfig';
 import QRCode from 'qrcode.react';
 
 const CreateEvent = () => {
@@ -30,7 +30,7 @@ const CreateEvent = () => {
     setError(null);
 
     try {
-      const response = await axios.post('/api/events', formData);
+      const response = await axios.post('/events', formData);
       setLoading(false);
       navigate(`/events/${response.data._id}`);
     } catch (err) {

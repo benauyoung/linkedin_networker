@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Card, Alert } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../axiosConfig';
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -20,12 +20,13 @@ const RegistrationForm = () => {
 
   useEffect(() => {
     const fetchEvent = async () => {
+      setLoading(true);
       try {
-        const response = await axios.get(`/api/events/${eventId}`);
+        const response = await axios.get(`/events/${eventId}`);
         setEvent(response.data);
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch event details');
+        setError('Failed to load event details.');
         setLoading(false);
         console.error('Error fetching event:', err);
       }
@@ -61,7 +62,7 @@ const RegistrationForm = () => {
     }
 
     try {
-      await axios.post('/api/attendees', {
+      await axios.post('/attendees', {
         ...formData,
         eventId
       });

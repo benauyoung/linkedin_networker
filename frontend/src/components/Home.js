@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Button, Alert, Spinner, Container, Row, Col } from 'react-bootstrap';
-import axios from 'axios';
+import { Card, Button, Alert, Spinner, Container } from 'react-bootstrap';
+import axios from '../axiosConfig';
 
 const Home = () => {
   const [events, setEvents] = useState([]);
@@ -10,14 +10,14 @@ const Home = () => {
 
   useEffect(() => {
     const fetchEvents = async () => {
+      setLoading(true);
       try {
-        const response = await axios.get('/api/events');
+        const response = await axios.get('/events');
         setEvents(response.data);
         setLoading(false);
       } catch (err) {
-        setError('Error loading events. Please try refreshing the page.');
+        setError('Failed to load events');
         setLoading(false);
-        console.error('Error fetching events:', err);
       }
     };
 

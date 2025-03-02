@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Card, Button, Row, Col, Alert, Modal, Form } from 'react-bootstrap';
+import { Card, Button, Row, Col, Alert, Modal } from 'react-bootstrap';
 import QRCode from 'qrcode.react';
-import axios from 'axios';
+import axios from '../axiosConfig';
 import moment from 'moment';
 
 const EventDetails = () => {
@@ -17,16 +17,16 @@ const EventDetails = () => {
     const fetchEventDetails = async () => {
       try {
         // Fetch event details
-        const eventResponse = await axios.get(`/api/events/${id}`);
+        const eventResponse = await axios.get(`/events/${id}`);
         setEvent(eventResponse.data);
         
         // Fetch attendees for this event
-        const attendeesResponse = await axios.get(`/api/events/${id}/attendees`);
+        const attendeesResponse = await axios.get(`/attendees/event/${id}`);
         setAttendees(attendeesResponse.data);
         
         setLoading(false);
       } catch (err) {
-        setError('Failed to fetch event details. Please try again.');
+        setError('Failed to load event details');
         setLoading(false);
         console.error('Error fetching event details:', err);
       }
@@ -37,7 +37,7 @@ const EventDetails = () => {
 
   const handleCompleteEvent = async () => {
     try {
-      const response = await axios.put(`/api/events/${id}`, {
+      const response = await axios.put(`/events/${id}`, {
         ...event,
         isCompleted: true
       });
