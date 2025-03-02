@@ -1,11 +1,15 @@
 // API route for attendees
-import { connectToDatabase } from './_utils/mongodb';
+const { connectToMongoDB } = require('./_utils/mongodb');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   // Set CORS headers
+  res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PATCH, DELETE');
+  res.setHeader(
+    'Access-Control-Allow-Headers',
+    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+  );
   
   // Handle OPTIONS pre-flight request
   if (req.method === 'OPTIONS') {
@@ -14,7 +18,7 @@ export default async function handler(req, res) {
   
   try {
     // Connect to the database
-    const { Attendee, Event } = await connectToDatabase();
+    const { Attendee, Event } = await connectToMongoDB();
     
     // Handle different HTTP methods
     if (req.method === 'GET') {
@@ -33,18 +37,30 @@ export default async function handler(req, res) {
         const { name, email, linkedinUrl, eventId } = req.body;
         
         // Validate required fields
-        if (!name || !email || !linkedinUrl || !eventId) {
-          return res.status(400).json({ error: 'Missing required fields' });
+        if (!name || !email || !eventId) {
+          return res.status(400).json({ 
+            error: 'Missing required fields',
+            requiredFields: ['name', 'email', 'eventId']
+          });
         }
         
-        // Check if the event exists
-        const event = await Event.findById(eventId);
+        // Check if the event exists - try to find by _id first, then by eventCode
+        let event = await Event.findById(eventId).catch(() => null);
+        
+        // If not found by _id, try to find by eventCode
+        if (!event) {
+          event = await Event.findOne({ eventCode: eventId });
+        }
+        
         if (!event) {
           return res.status(404).json({ error: 'Event not found' });
         }
         
+        // Use the eventCode as the eventId for consistency
+        const eventCode = event.eventCode;
+        
         // Check if the attendee is already registered for this event
-        const existingAttendee = await Attendee.findOne({ email, eventId });
+        const existingAttendee = await Attendee.findOne({ email, eventId: eventCode });
         if (existingAttendee) {
           return res.status(400).json({ error: 'You have already registered for this event' });
         }
@@ -53,12 +69,22 @@ export default async function handler(req, res) {
         const attendee = new Attendee({
           name,
           email,
-          linkedinUrl,
-          eventId
+          linkedinUrl: linkedinUrl || '', // Optional field
+          eventId: eventCode // Use eventCode for consistency
         });
         
         await attendee.save();
-        return res.status(201).json(attendee);
+        
+        // Return success with event info
+        return res.status(201).json({
+          success: true,
+          attendee,
+          event: {
+            name: event.name,
+            date: event.date,
+            location: event.location
+          }
+        });
       } catch (error) {
         console.error('Error registering attendee:', error);
         return res.status(500).json({ error: 'Failed to register: ' + error.message });
@@ -71,4 +97,4 @@ export default async function handler(req, res) {
     console.error('Database error:', dbError);
     return res.status(500).json({ error: 'Database connection failed', details: dbError.message });
   }
-}
+};

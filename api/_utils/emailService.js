@@ -1,263 +1,253 @@
-// Email service for EVENT CONNECT
-import nodemailer from 'nodemailer';
+const nodemailer = require('nodemailer');
 
-// Create transporter for sending emails
-let transporter = null;
+// Configurable email templates
+const emailTemplates = {
+  followUp: (event, attendee) => ({
+    subject: `Thank you for attending ${event.name}!`,
+    text: `
+Hello ${attendee.name || 'there'},
 
-/**
- * Initialize the email transporter
- * Uses environment variables or default test account
- */
-export async function initializeEmailTransporter() {
-  if (transporter) {
-    return transporter;
+Thank you for attending our event "${event.name}" at ${event.location}.
+
+We hope you enjoyed the event and made valuable connections. We would love to hear your feedback!
+
+Best regards,
+The EVENT CONNECT Team
+    `,
+    html: `
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+  <div style="background-color: #0066cc; padding: 15px; text-align: center;">
+    <h1 style="color: white; margin: 0; font-size: 24px;">EVENT CONNECT</h1>
+  </div>
+  
+  <div style="padding: 20px; border: 1px solid #ddd; border-top: none;">
+    <h2 style="color: #0066cc;">Thank you for attending ${event.name}!</h2>
+    
+    <p>Hello ${attendee.name || 'there'},</p>
+    
+    <p>Thank you for attending our event "${event.name}" at ${event.location}.</p>
+    
+    <p>We hope you enjoyed the event and made valuable connections. Here are some highlights:</p>
+    
+    <ul>
+      <li>Event Date: ${new Date(event.date).toLocaleDateString()}</li>
+      <li>Location: ${event.location}</li>
+      <li>Organizer: ${event.organizer || 'EVENT CONNECT'}</li>
+    </ul>
+    
+    <p>We would love to hear your feedback about the event!</p>
+    
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="#" style="background-color: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">PROVIDE FEEDBACK</a>
+    </div>
+    
+    <p>Best regards,<br>The EVENT CONNECT Team</p>
+  </div>
+  
+  <div style="text-align: center; margin-top: 20px; color: #777; font-size: 12px;">
+    <p> 2025 EVENT CONNECT. All rights reserved.</p>
+    <p>If you no longer wish to receive emails from us, <a href="#" style="color: #0066cc;">unsubscribe here</a>.</p>
+  </div>
+</div>
+    `
+  })
+};
+
+class EmailService {
+  constructor() {
+    this.transporter = null;
+    this.defaultFrom = '';
+    this.isTestAccount = false;
+    this.testAccount = null;
   }
 
-  // If email config is provided in environment variables
-  if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT || 587,
-      secure: process.env.EMAIL_SECURE === 'true',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-    
-    console.log('Email service initialized with provided credentials');
-    return transporter;
-  } 
-  
-  // For development: Create a test account on ethereal.email
-  const testAccount = await nodemailer.createTestAccount();
-  
-  transporter = nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    secure: false,
-    auth: {
-      user: testAccount.user,
-      pass: testAccount.pass,
-    },
-  });
-  
-  console.log('Email service initialized with test account');
-  console.log('Test email account:', testAccount.user);
-  return transporter;
-}
-
-/**
- * Send emails to all attendees of an event
- * @param {Object} event - The event object
- * @param {Array} attendees - Array of attendee objects
- * @param {String} emailType - Type of email to send (confirmation, reminder, followup)
- */
-export async function sendEventEmails(event, attendees, emailType = 'followup') {
-  try {
-    if (!transporter) {
-      await initializeEmailTransporter();
-    }
-    
-    // Get email template based on type
-    const template = getEmailTemplate(event, emailType);
-    
-    // Send email to each attendee
-    const emailPromises = attendees.map(attendee => {
-      const personalizedContent = template.html.replace('{{NAME}}', attendee.name);
+  async initialize() {
+    try {
+      // Determine if we're in production or development
+      const isProduction = process.env.NODE_ENV === 'production';
       
-      return transporter.sendMail({
-        from: `"EVENT CONNECT" <${process.env.EMAIL_FROM || 'eventconnect@example.com'}>`,
-        to: attendee.email,
-        subject: template.subject,
-        html: personalizedContent,
-      });
-    });
-    
-    const results = await Promise.all(emailPromises);
-    
-    // For test accounts, log preview URLs
-    results.forEach((info, index) => {
-      if (info.messageId && nodemailer.getTestMessageUrl) {
-        console.log(`Email sent to ${attendees[index].email}`);
-        console.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
+      if (isProduction && process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        // Production: Use real SMTP server
+        this.transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST,
+          port: parseInt(process.env.EMAIL_PORT || '587', 10),
+          secure: process.env.EMAIL_SECURE === 'true',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+          },
+          tls: {
+            rejectUnauthorized: false // In some environments this might be needed
+          }
+        });
+        
+        this.defaultFrom = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+        this.isTestAccount = false;
+        
+        console.log(`Email service initialized with ${process.env.EMAIL_HOST}`);
+      } else {
+        // Development: Use Ethereal for testing
+        this.testAccount = await nodemailer.createTestAccount();
+        this.transporter = nodemailer.createTransport({
+          host: 'smtp.ethereal.email',
+          port: 587,
+          secure: false,
+          auth: {
+            user: this.testAccount.user,
+            pass: this.testAccount.pass
+          }
+        });
+        
+        this.defaultFrom = `EVENT CONNECT <${this.testAccount.user}>`;
+        this.isTestAccount = true;
+        
+        console.log('Email service initialized with test account');
+        console.log(`Test email account: ${this.testAccount.user}`);
       }
-    });
-    
-    return {
-      success: true,
-      count: results.length,
-      message: `${results.length} emails sent successfully`
-    };
-  } catch (error) {
-    console.error('Error sending emails:', error);
-    return {
-      success: false,
-      error: error.message
-    };
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to initialize email service:', error);
+      return false;
+    }
   }
-}
 
-/**
- * Mark an event as completed and send follow-up emails
- * @param {String} eventId - The ID of the event to mark as completed
- * @param {Object} dbConnection - Database connection with models
- */
-export async function completeEventAndSendEmails(eventId, dbConnection) {
-  try {
-    const { Event, Attendee } = dbConnection;
-    
-    // Find event by ID
-    const event = await Event.findById(eventId);
-    if (!event) {
-      throw new Error(`Event with ID ${eventId} not found`);
+  async sendEventFollowUpEmails(event, attendees) {
+    if (!this.transporter) {
+      await this.initialize();
     }
     
-    // Mark event as completed
-    event.isCompleted = true;
-    await event.save();
+    if (!Array.isArray(attendees) || attendees.length === 0) {
+      // If no real attendees, create test data in development mode
+      if (this.isTestAccount) {
+        console.log('Created test attendees for demonstration');
+        attendees = [
+          { email: 'test1@example.com', name: 'Test User 1' },
+          { email: 'test2@example.com', name: 'Test User 2' }
+        ];
+      } else {
+        console.warn('No attendees found for event follow-up emails');
+        return { success: false, error: 'No attendees found' };
+      }
+    }
     
-    // Find all attendees for this event
-    const attendees = await Attendee.find({ eventId: event.eventCode });
+    const results = [];
     
-    if (attendees.length === 0) {
+    for (const attendee of attendees) {
+      if (!attendee.email) {
+        console.warn('Skipping attendee without email address');
+        continue;
+      }
+      
+      try {
+        const template = emailTemplates.followUp(event, attendee);
+        
+        const mailOptions = {
+          from: this.defaultFrom,
+          to: attendee.email,
+          subject: template.subject,
+          text: template.text,
+          html: template.html
+        };
+        
+        const info = await this.transporter.sendMail(mailOptions);
+        
+        console.log(`Email sent to ${attendee.email}`);
+        
+        // For test accounts, show the preview URL
+        if (this.isTestAccount) {
+          console.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
+        }
+        
+        results.push({
+          attendee: attendee.email,
+          success: true,
+          messageId: info.messageId
+        });
+      } catch (error) {
+        console.error(`Failed to send email to ${attendee.email}:`, error);
+        
+        results.push({
+          attendee: attendee.email,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+    
+    return {
+      success: results.some(r => r.success),
+      totalSent: results.filter(r => r.success).length,
+      totalFailed: results.filter(r => !r.success).length,
+      details: results
+    };
+  }
+  
+  // Method to verify connection
+  async verifyConnection() {
+    if (!this.transporter) {
+      await this.initialize();
+    }
+    
+    try {
+      const verification = await this.transporter.verify();
+      return { success: verification, isTestAccount: this.isTestAccount };
+    } catch (error) {
+      console.error('SMTP verification failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  // Method to send a test email
+  async sendTestEmail(to) {
+    if (!this.transporter) {
+      await this.initialize();
+    }
+    
+    try {
+      const info = await this.transporter.sendMail({
+        from: this.defaultFrom,
+        to: to,
+        subject: 'EVENT CONNECT - Test Email',
+        text: 'This is a test email from EVENT CONNECT to verify email functionality.',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+            <div style="background-color: #0066cc; padding: 15px; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 24px;">EVENT CONNECT</h1>
+            </div>
+            <div style="padding: 20px; border: 1px solid #ddd; border-top: none;">
+              <h2 style="color: #0066cc;">Test Email</h2>
+              <p>This is a test email from EVENT CONNECT to verify email functionality.</p>
+              <p>If you're receiving this, your email configuration is working correctly!</p>
+            </div>
+          </div>
+        `
+      });
+      
+      // For test accounts, show the preview URL
+      if (this.isTestAccount) {
+        console.log(`Test email sent to ${to}`);
+        console.log(`Preview URL: ${nodemailer.getTestMessageUrl(info)}`);
+        return {
+          success: true,
+          previewUrl: nodemailer.getTestMessageUrl(info)
+        };
+      }
+      
       return {
         success: true,
-        event: event,
-        message: 'Event marked as completed, but no attendees found to email'
+        messageId: info.messageId
+      };
+    } catch (error) {
+      console.error('Failed to send test email:', error);
+      return {
+        success: false,
+        error: error.message
       };
     }
-    
-    // Send follow-up emails
-    const emailResult = await sendEventEmails(event, attendees, 'followup');
-    
-    return {
-      success: true,
-      event: event,
-      emailsSent: emailResult.count,
-      message: `Event marked as completed and ${emailResult.count} follow-up emails sent`
-    };
-  } catch (error) {
-    console.error('Error completing event:', error);
-    return {
-      success: false,
-      error: error.message
-    };
   }
 }
 
-/**
- * Get email template based on type
- * @param {Object} event - The event object
- * @param {String} type - Type of email (confirmation, reminder, followup)
- * @returns {Object} Email template with subject and HTML content
- */
-function getEmailTemplate(event, type) {
-  // Base style for all emails
-  const baseStyle = `
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #0047AB; color: white; padding: 20px; text-align: center; }
-    .content { padding: 20px; background-color: #f9f9f9; }
-    .footer { text-align: center; padding: 20px; font-size: 12px; color: #666; }
-    .button { display: inline-block; padding: 10px 20px; background-color: #0047AB; color: white; 
-              text-decoration: none; border-radius: 4px; margin-top: 15px; }
-  `;
-  
-  switch (type) {
-    case 'followup':
-      return {
-        subject: `Thank you for attending ${event.name}`,
-        html: `
-          <html>
-            <head>
-              <style>${baseStyle}</style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="header">
-                  <h1>Thank You for Attending!</h1>
-                </div>
-                <div class="content">
-                  <p>Hello {{NAME}},</p>
-                  <p>Thank you for attending <strong>${event.name}</strong> at ${event.location} on ${new Date(event.date).toLocaleDateString()}.</p>
-                  <p>We hope you enjoyed the event and made valuable connections. We'd love to hear your feedback and see you at future events!</p>
-                  <p>Feel free to connect with other attendees on your networking platforms.</p>
-                  <a href="#" class="button">View Event Photos</a>
-                </div>
-                <div class="footer">
-                  <p>This email was sent by EVENT CONNECT. To unsubscribe, click <a href="#">here</a>.</p>
-                  <p>&copy; 2025 EVENT CONNECT. All rights reserved.</p>
-                </div>
-              </div>
-            </body>
-          </html>
-        `
-      };
-    
-    case 'reminder':
-      return {
-        subject: `Reminder: ${event.name} is tomorrow!`,
-        html: `
-          <html>
-            <head>
-              <style>${baseStyle}</style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="header">
-                  <h1>Event Reminder</h1>
-                </div>
-                <div class="content">
-                  <p>Hello {{NAME}},</p>
-                  <p>This is a friendly reminder that <strong>${event.name}</strong> is happening tomorrow at ${event.location}.</p>
-                  <p>Date: ${new Date(event.date).toLocaleDateString()}</p>
-                  <p>Time: ${new Date(event.date).toLocaleTimeString()}</p>
-                  <p>Location: ${event.location}</p>
-                  <p>We look forward to seeing you there!</p>
-                  <a href="#" class="button">View Event Details</a>
-                </div>
-                <div class="footer">
-                  <p>This email was sent by EVENT CONNECT. To unsubscribe, click <a href="#">here</a>.</p>
-                  <p>&copy; 2025 EVENT CONNECT. All rights reserved.</p>
-                </div>
-              </div>
-            </body>
-          </html>
-        `
-      };
-    
-    case 'confirmation':
-    default:
-      return {
-        subject: `Registration Confirmed: ${event.name}`,
-        html: `
-          <html>
-            <head>
-              <style>${baseStyle}</style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="header">
-                  <h1>Registration Confirmed</h1>
-                </div>
-                <div class="content">
-                  <p>Hello {{NAME}},</p>
-                  <p>Your registration for <strong>${event.name}</strong> has been confirmed!</p>
-                  <p>Date: ${new Date(event.date).toLocaleDateString()}</p>
-                  <p>Time: ${new Date(event.date).toLocaleTimeString()}</p>
-                  <p>Location: ${event.location}</p>
-                  <p>We look forward to seeing you at the event. If you have any questions, please feel free to contact us.</p>
-                  <a href="#" class="button">Add to Calendar</a>
-                </div>
-                <div class="footer">
-                  <p>This email was sent by EVENT CONNECT. To unsubscribe, click <a href="#">here</a>.</p>
-                  <p>&copy; 2025 EVENT CONNECT. All rights reserved.</p>
-                </div>
-              </div>
-            </body>
-          </html>
-        `
-      };
-  }
-}
+// Create and export a singleton instance
+const emailService = new EmailService();
+module.exports = emailService;

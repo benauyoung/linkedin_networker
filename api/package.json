@@ -2,7 +2,7 @@
   "name": "linkedin-networker-api",
   "version": "1.0.0",
   "description": "API for LinkedIn Networker App",
-  "type": "module",
+  "type": "commonjs",
   "main": "index.js",
   "dependencies": {
     "cors": "^2.8.5",

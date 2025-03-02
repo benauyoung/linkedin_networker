@@ -14,6 +14,8 @@ const EventDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [completingEvent, setCompletingEvent] = useState(false);
+  const [completeResult, setCompleteResult] = useState(null);
   
   useEffect(() => {
     // Check if we have passed event data from the state (from CreateEvent)
@@ -32,37 +34,40 @@ const EventDetails = () => {
     
     const fetchEventDetails = async () => {
       try {
+        console.log('Fetching event with ID:', id);
         // Fetch event details
-        const eventResponse = await axios.get(`/events/${id}`);
+        const eventResponse = await axios.get(`/api/events/${id}`);
+        console.log('Event data:', eventResponse.data);
         setEvent(eventResponse.data);
         
         // Fetch attendees for this event
-        const attendeesResponse = await axios.get(`/attendees/event/${id}`);
-        setAttendees(attendeesResponse.data);
+        try {
+          const attendeesResponse = await axios.get(`/api/attendees/${id}`);
+          setAttendees(attendeesResponse.data);
+        } catch (attendeesError) {
+          console.error('Error fetching attendees:', attendeesError);
+          setAttendees([]);
+        }
         
         setLoading(false);
       } catch (err) {
         console.error('Error fetching event details:', err);
         
         // Check if it's a demo event or dynamically generated
-        if (id.startsWith('evt')) {
-          // Extract date and time from ID if it was dynamically generated
-          const idTime = id.replace(/^evt/, '');
-          const eventDate = new Date(parseInt(idTime, 10) || Date.now());
-          
+        if (id.startsWith('evt') || id.startsWith('demo')) {
           // Set mock data for the event
           setEvent({
             _id: id,
             name: 'Demo Event',
-            date: eventDate.toISOString(),
+            date: new Date().toISOString(),
             location: 'Virtual Event',
-            description: 'This is a demonstration event while the API is being configured.',
+            description: 'This is a demonstration event.',
             eventCode: `DEMO${Math.floor(Math.random() * 900) + 100}`,
             qrCodeUrl: '',
             isDemoEvent: true
           });
           setAttendees([]);
-          setError('Demo Mode: This event data is not saved to a database and will be lost on page refresh.');
+          setError('Demo Mode: This is a demonstration event with mock data.');
         } else {
           setError('Failed to load event details. The event may not exist or the server is unavailable.');
         }
@@ -78,10 +83,41 @@ const EventDetails = () => {
     setShowCompleteModal(true);
   };
   
-  const confirmCompleteEvent = () => {
-    // In a real app, we would call an API to mark the event as completed
-    setShowCompleteModal(false);
-    navigate('/');
+  const confirmCompleteEvent = async () => {
+    if (!event || !event._id) {
+      setError('Cannot complete event: Invalid event data');
+      setShowCompleteModal(false);
+      return;
+    }
+    
+    setCompletingEvent(true);
+    
+    try {
+      const response = await axios.post('/api/complete-event', {
+        eventId: event._id
+      });
+      
+      setCompleteResult({
+        success: true,
+        message: 'Event completed successfully! Follow-up emails have been sent to attendees.'
+      });
+      
+      // Mark the event as completed locally
+      setEvent(prev => ({
+        ...prev,
+        isCompleted: true
+      }));
+      
+    } catch (error) {
+      console.error('Error completing event:', error);
+      setCompleteResult({
+        success: false,
+        message: `Failed to complete event: ${error.response?.data?.error || error.message}`
+      });
+    } finally {
+      setCompletingEvent(false);
+      setShowCompleteModal(false);
+    }
   };
   
   if (loading) {
@@ -96,7 +132,7 @@ const EventDetails = () => {
     return (
       <Container>
         <Alert variant="danger">
-          Event not found or an error occurred.
+          Event not found or has been deleted.
           <div className="mt-3">
             <Link to="/" className="btn btn-outline-danger">Return to Home</Link>
           </div>
@@ -111,6 +147,12 @@ const EventDetails = () => {
   return (
     <Container className="py-4">
       {error && <Alert variant="warning">{error}</Alert>}
+      
+      {completeResult && (
+        <Alert variant={completeResult.success ? 'success' : 'danger'} dismissible onClose={() => setCompleteResult(null)}>
+          {completeResult.message}
+        </Alert>
+      )}
       
       <Card className="shadow-sm mb-4">
         <Card.Body>
@@ -168,31 +210,51 @@ const EventDetails = () => {
               >
                 Registration Page
               </Button>
-              <Button
-                variant="danger"
-                onClick={handleCompleteEvent}
-              >
-                Complete Event
-              </Button>
+              {!event.isCompleted ? (
+                <Button
+                  variant="danger"
+                  onClick={handleCompleteEvent}
+                >
+                  Complete Event
+                </Button>
+              ) : (
+                <Button
+                  variant="secondary"
+                  disabled
+                >
+                  Event Completed
+                </Button>
+              )}
             </div>
           </div>
         </Card.Body>
       </Card>
       
       {/* Complete Event Modal */}
-      <Modal show={showCompleteModal} onHide={() => setShowCompleteModal(false)}>
-        <Modal.Header closeButton>
+      <Modal show={showCompleteModal} onHide={() => !completingEvent && setShowCompleteModal(false)}>
+        <Modal.Header closeButton={!completingEvent}>
           <Modal.Title>Complete Event</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          Are you sure you want to complete this event? This will mark the event as finished.
+          <p>Are you sure you want to complete this event? This will:</p>
+          <ul>
+            <li>Mark the event as finished</li>
+            <li>Send follow-up emails to all registered attendees</li>
+          </ul>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowCompleteModal(false)}>
+          <Button variant="secondary" onClick={() => setShowCompleteModal(false)} disabled={completingEvent}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={confirmCompleteEvent}>
-            Complete Event
+          <Button variant="danger" onClick={confirmCompleteEvent} disabled={completingEvent}>
+            {completingEvent ? (
+              <>
+                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />{' '}
+                Processing...
+              </>
+            ) : (
+              'Complete Event'
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

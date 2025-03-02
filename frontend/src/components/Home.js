@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Button, Alert, Spinner, Container } from 'react-bootstrap';
+import { Card, Button, Alert, Spinner, Container, Row, Col } from 'react-bootstrap';
 import axios from '../axiosConfig';
 
 const Home = () => {
@@ -13,7 +13,9 @@ const Home = () => {
       setLoading(true);
       try {
         // Try to fetch from the API
+        console.log('Fetching events from API...');
         const response = await axios.get('/api/events');
+        console.log('Events data:', response.data);
         setEvents(response.data);
         setLoading(false);
       } catch (err) {
@@ -62,33 +64,31 @@ const Home = () => {
 
   return (
     <Container className="my-4">
-      <div className="welcome-header">
-        <h1>Welcome to EVENT CONNECT</h1>
-        <p>Create and manage professional networking events, collect LinkedIn profiles from attendees</p>
+      <div className="welcome-header text-center mb-4">
+        <h1 className="text-danger">Welcome to EVENT CONNECT</h1>
+        <p className="lead">Create and manage professional networking events, collect LinkedIn profiles from attendees</p>
       </div>
 
-      <div className="create-event-card">
-        <Card className="text-center">
-          <Card.Body>
-            <img 
-              src="/assets/walking-logo.svg" 
-              alt="EVENT CONNECT Logo" 
-              style={{ width: '60px', marginBottom: '15px' }} 
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = 'https://via.placeholder.com/60x60?text=EC';
-              }}
-            />
-            <Card.Title>Ready to start networking?</Card.Title>
-            <Card.Text>
-              Create a new event to start collecting LinkedIn profiles from attendees.
-            </Card.Text>
-            <Link to="/create-event">
-              <Button variant="danger" size="lg" className="create-btn">Create New Event</Button>
-            </Link>
-          </Card.Body>
-        </Card>
-      </div>
+      <Card className="text-center mb-5 shadow-sm">
+        <Card.Body className="py-5">
+          <img 
+            src="/assets/walking-logo.svg" 
+            alt="EVENT CONNECT Logo" 
+            style={{ width: '60px', marginBottom: '15px', color: '#dc3545' }} 
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiNkYzM1NDUiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTMgMnY4aDUiPjwvcGF0aD48cGF0aCBkPSJNMTMgMTB2NmgzYTIgMiAwIDAgMCAwLTQgMiAyIDAgMCAwIDAtNGgtM3oiPjwvcGF0aD48cGF0aCBkPSJNMTMgMjJoLTJ2LTJoMnYtMmgtMnYtMmgydi0yIj48L3BhdGg+PC9zdmc+';
+            }}
+          />
+          <Card.Title className="fs-3 mb-3">Ready to start networking?</Card.Title>
+          <Card.Text>
+            Create a new event to start collecting LinkedIn profiles from attendees.
+          </Card.Text>
+          <Link to="/create-event">
+            <Button variant="danger" size="lg" className="px-4 py-2 mt-2">Create New Event</Button>
+          </Link>
+        </Card.Body>
+      </Card>
 
       {error && (
         <Alert variant="warning" className="my-3">
@@ -97,34 +97,36 @@ const Home = () => {
         </Alert>
       )}
 
-      <div className="events-section">
-        <h2>Your Events</h2>
+      <div className="events-section mb-5">
+        <h2 className="mb-4">Your Events</h2>
         
         {events.length === 0 ? (
-          <div className="text-center my-4 text-muted">
-            <p>You haven't created any events yet.</p>
+          <div className="text-center my-5 p-5 bg-light rounded">
+            <p className="text-muted mb-0">You haven't created any events yet.</p>
           </div>
         ) : (
-          <div className="event-cards">
+          <Row xs={1} md={2} lg={3} className="g-4">
             {events.map(event => (
-              <Card key={event._id} className="event-card">
-                <Card.Body>
-                  <Card.Title>{event.name}</Card.Title>
-                  <Card.Subtitle className="mb-2 text-muted">
-                    {new Date(event.date).toLocaleDateString()} | {event.location}
-                  </Card.Subtitle>
-                  <Card.Text>
-                    {event.description 
-                      ? event.description.substring(0, 100) + (event.description.length > 100 ? '...' : '') 
-                      : 'No description provided.'}
-                  </Card.Text>
-                  <Link to={`/event/${event._id}`}>
-                    <Button variant="primary">View Details</Button>
-                  </Link>
-                </Card.Body>
-              </Card>
+              <Col key={event._id}>
+                <Card className="h-100 shadow-sm">
+                  <Card.Body>
+                    <Card.Title>{event.name}</Card.Title>
+                    <Card.Subtitle className="mb-3 text-muted">
+                      {new Date(event.date).toLocaleDateString()} | {event.location}
+                    </Card.Subtitle>
+                    <Card.Text className="mb-4">
+                      {event.description 
+                        ? event.description.substring(0, 100) + (event.description.length > 100 ? '...' : '') 
+                        : 'No description provided.'}
+                    </Card.Text>
+                    <div className="d-grid mt-auto">
+                      <Link to={`/event/${event._id}`} className="btn btn-primary">View Details</Link>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
             ))}
-          </div>
+          </Row>
         )}
       </div>
     </Container>

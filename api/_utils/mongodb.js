@@ -1,6 +1,6 @@
 // MongoDB connection utility for serverless functions
-import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 
 // Global variables for caching connection
 let cachedDb = null;
@@ -15,7 +15,11 @@ const EventSchema = new mongoose.Schema({
   location: { type: String, required: true },
   description: { type: String, default: '' },
   organizer: { type: String },
-  eventCode: { type: String, required: true, unique: true },
+  eventCode: { 
+    type: String, 
+    default: () => 'EVT' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+    unique: true 
+  },
   qrCodeUrl: { type: String },
   isCompleted: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
@@ -24,9 +28,11 @@ const EventSchema = new mongoose.Schema({
 const AttendeeSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
-  linkedinUrl: { type: String, required: true },
+  linkedinUrl: { type: String },
   eventId: { type: String, required: true },
-  registeredAt: { type: Date, default: Date.now }
+  registeredAt: { type: Date, default: Date.now },
+  checkedIn: { type: Boolean, default: false },
+  checkedInAt: Date
 });
 
 // Prevent mongoose warning about the strictQuery option
@@ -36,7 +42,7 @@ mongoose.set('strictQuery', false);
 const timeoutPromise = (ms) => 
   new Promise((_, reject) => setTimeout(() => reject(new Error(`Connection timed out after ${ms}ms`)), ms));
 
-export async function connectToDatabase() {
+async function connectToMongoDB() {
   // If we already have a connection, return it
   if (cachedDb && mongoose.connection.readyState === 1) {
     console.log('Using existing MongoDB connection');
@@ -50,6 +56,7 @@ export async function connectToDatabase() {
   // If we're in the process of connecting, wait for that to finish
   if (isConnecting && connectionPromise) {
     try {
+      console.log('Waiting for existing MongoDB connection attempt to complete');
       await connectionPromise;
       return { 
         db: cachedDb, 
@@ -57,107 +64,108 @@ export async function connectToDatabase() {
         Attendee: mongoose.models.Attendee || mongoose.model('Attendee', AttendeeSchema)
       };
     } catch (error) {
-      console.error('Error waiting for existing connection:', error);
-      // Continue to try a new connection
+      console.error('Existing connection attempt failed, retrying:', error);
+      // The existing attempt failed, so we'll try a new one
     }
   }
   
-  // Set up a new connection
   isConnecting = true;
   connectionPromise = (async () => {
     try {
-      // Reset connection if it's in a bad state
-      if (mongoose.connection.readyState !== 0) {
-        await mongoose.disconnect();
-      }
+      // Set a connection timeout of 15 seconds
+      const TIMEOUT_MS = 15000;
       
-      // First try to connect to MongoDB Atlas if URI is provided
+      // Try connecting to MongoDB Atlas if URI is provided
       if (process.env.MONGODB_URI) {
-        console.log('Connecting to MongoDB Atlas...');
-        
         try {
-          // Use a timeout to avoid hanging on serverless functions
+          console.log('Connecting to MongoDB Atlas...');
+          
           await Promise.race([
             mongoose.connect(process.env.MONGODB_URI, {
               useNewUrlParser: true,
-              useUnifiedTopology: true,
-              serverSelectionTimeoutMS: 5000, // 5 second timeout for server selection
-              socketTimeoutMS: 30000, // 30 second timeout for socket operations
+              useUnifiedTopology: true
             }),
-            timeoutPromise(10000) // 10 second overall timeout
+            timeoutPromise(TIMEOUT_MS)
           ]);
           
+          console.log('Successfully connected to MongoDB Atlas');
           cachedDb = mongoose.connection.db;
-          console.log('Connected to MongoDB Atlas');
-          
-          // Create models if they don't exist
-          const Event = mongoose.models.Event || mongoose.model('Event', EventSchema);
-          const Attendee = mongoose.models.Attendee || mongoose.model('Attendee', AttendeeSchema);
-          
-          isConnecting = false;
-          return { db: cachedDb, Event, Attendee };
+          return cachedDb;
         } catch (atlasError) {
-          console.error('Error connecting to MongoDB Atlas:', atlasError);
+          console.error('Failed to connect to MongoDB Atlas:', atlasError);
           console.log('Falling back to in-memory MongoDB...');
-          // Fall through to in-memory option
+          // Fall through to in-memory MongoDB
         }
-      } else {
-        console.log('No MongoDB URI found, using in-memory MongoDB...');
       }
       
-      // Fallback to in-memory MongoDB
-      try {
-        // Create in-memory MongoDB server if it doesn't exist
-        if (!mongoMemoryServer) {
-          mongoMemoryServer = await MongoMemoryServer.create();
-        }
-        
-        const uri = mongoMemoryServer.getUri();
-        
-        await mongoose.connect(uri, {
+      // Fall back to in-memory MongoDB for development
+      console.log('Initializing in-memory MongoDB...');
+      
+      // Ensure the previous server is closed if it exists
+      if (mongoMemoryServer) {
+        await mongoMemoryServer.stop();
+      }
+      
+      // Create a new in-memory server
+      mongoMemoryServer = await MongoMemoryServer.create();
+      const uri = mongoMemoryServer.getUri();
+      
+      await Promise.race([
+        mongoose.connect(uri, {
           useNewUrlParser: true,
           useUnifiedTopology: true
-        });
-        
-        cachedDb = mongoose.connection.db;
-        console.log('Connected to in-memory MongoDB');
-        
-        // Create models if they don't exist
-        const Event = mongoose.models.Event || mongoose.model('Event', EventSchema);
-        const Attendee = mongoose.models.Attendee || mongoose.model('Attendee', AttendeeSchema);
-        
-        isConnecting = false;
-        return { db: cachedDb, Event, Attendee };
-      } catch (memoryError) {
-        console.error('Error connecting to in-memory MongoDB:', memoryError);
-        throw memoryError;
-      }
+        }),
+        timeoutPromise(TIMEOUT_MS)
+      ]);
+      
+      console.log('Connected to in-memory MongoDB');
+      cachedDb = mongoose.connection.db;
+      return cachedDb;
     } catch (error) {
-      isConnecting = false;
-      console.error('MongoDB connection error:', error);
+      console.error('Failed to connect to any MongoDB instance:', error);
       throw error;
+    } finally {
+      isConnecting = false;
     }
   })();
   
-  return connectionPromise;
+  try {
+    await connectionPromise;
+    return { 
+      db: cachedDb, 
+      Event: mongoose.models.Event || mongoose.model('Event', EventSchema),
+      Attendee: mongoose.models.Attendee || mongoose.model('Attendee', AttendeeSchema)
+    };
+  } catch (error) {
+    console.error('Connection to MongoDB failed:', error);
+    throw error;
+  }
 }
 
-export async function disconnectFromDatabase() {
+async function disconnectFromMongoDB() {
   try {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.disconnect();
+      console.log('Disconnected from MongoDB');
+    }
+    
     if (mongoMemoryServer) {
       await mongoMemoryServer.stop();
       mongoMemoryServer = null;
-    }
-    
-    if (mongoose.connection.readyState !== 0) {
-      await mongoose.disconnect();
+      console.log('Stopped in-memory MongoDB server');
     }
     
     cachedDb = null;
-    isConnecting = false;
     connectionPromise = null;
-    console.log('Disconnected from MongoDB');
+    isConnecting = false;
   } catch (error) {
-    console.error('Error disconnecting from MongoDB:', error);
+    console.error('Error during MongoDB disconnection:', error);
   }
 }
+
+module.exports = {
+  connectToMongoDB,
+  disconnectFromMongoDB,
+  EventSchema,
+  AttendeeSchema
+};

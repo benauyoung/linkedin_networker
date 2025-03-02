@@ -1,9 +1,9 @@
 // API server for EVENT CONNECT (Vercel Serverless)
-import express from 'express';
-import cors from 'cors';
-import mongoose from 'mongoose';
-import { connectToDatabase } from './_utils/mongodb.js';
-import completeEventHandler from './complete-event.js';
+const express = require('express');
+const cors = require('cors');
+const mongoose = require('mongoose');
+const { connectToMongoDB } = require('./_utils/mongodb');
+const completeEventHandler = require('./complete-event');
 
 // Create Express app
 const app = express();
@@ -44,8 +44,7 @@ async function setupApiRoutes(req, res) {
     }
     
     // Connect to the database
-    const dbConnection = await connectToDatabase();
-    const { Event } = dbConnection;
+    const { Event } = await connectToMongoDB();
     
     // GET events
     if (req.method === 'GET' && req.url === '/api/events') {
@@ -141,7 +140,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Serverless handler for Vercel
-export default async function handler(req, res) {
+async function handler(req, res) {
   // Add CORS headers manually for serverless
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -155,3 +154,5 @@ export default async function handler(req, res) {
   // Process API request
   return await setupApiRoutes(req, res);
 }
+
+module.exports = handler;
