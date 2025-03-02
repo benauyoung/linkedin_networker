@@ -108,44 +108,64 @@ Before deploying your application, follow these steps:
 
 ## Backend Deployment Options
 
-### Option 1: Vercel Serverless Functions
+### Option 1: Vercel Serverless Functions (Recommended)
 
 1. **Create a `vercel.json` File**
    Create a file in your project root:
    ```json
    {
      "version": 2,
-     "builds": [
-       {
-         "src": "backend/server.js",
-         "use": "@vercel/node"
-       },
-       {
-         "src": "frontend/build/**",
-         "use": "@vercel/static"
-       }
+     "buildCommand": "npm run vercel-build",
+     "outputDirectory": "frontend/build",
+     "rewrites": [
+       { "source": "/api/(.*)", "destination": "/api" },
+       { "source": "/(.*)", "destination": "/index.html" }
      ],
-     "routes": [
-       {
-         "src": "/api/(.*)",
-         "dest": "backend/server.js"
-       },
-       {
-         "src": "/(.*)",
-         "dest": "frontend/build/$1"
+     "env": {
+       "CI": "false",
+       "DISABLE_ESLINT_PLUGIN": "true",
+       "NODE_ENV": "production"
+     },
+     "functions": {
+       "api/*.js": {
+         "memory": 1024,
+         "maxDuration": 10
        }
-     ]
+     }
    }
    ```
 
-2. **Update Server.js to Handle Vercel Deployment**
+   **Important Function Settings:**
+   - `memory`: Allocates 1024MB of memory to functions (needed for MongoDB connections)
+   - `maxDuration`: Sets a 10-second timeout for functions (allows time for MongoDB connections)
+
+2. **Optimizing API Routes for Serverless**
+   When using MongoDB with serverless functions, optimize your connection handling:
+   
    ```javascript
-   // Add to server.js
-   if (process.env.NODE_ENV === 'production') {
-     app.use(express.static(path.join(__dirname, '../frontend/build')));
-     app.get('*', (req, res) => {
-       res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
-     });
+   // Example of optimized MongoDB connection in serverless
+   // See api/_utils/mongodb.js for the complete implementation
+   
+   // Use connection pooling
+   if (cachedDb && mongoose.connection.readyState === 1) {
+     return { db: cachedDb, models... };
+   }
+   
+   // Add timeouts to prevent hanging connections
+   try {
+     await Promise.race([
+       mongoose.connect(process.env.MONGODB_URI, {
+         useNewUrlParser: true,
+         useUnifiedTopology: true,
+         serverSelectionTimeoutMS: 5000,
+         socketTimeoutMS: 45000
+       }),
+       new Promise((_, reject) => 
+         setTimeout(() => reject(new Error('Connection timeout')), 10000)
+       )
+     ]);
+   } catch (error) {
+     // Handle connection errors
    }
    ```
 
@@ -227,7 +247,11 @@ Before deploying your application, follow these steps:
 
 4. **Configure Network Access**
    - Add an IP address
-   - Choose "Allow access from anywhere" for development (restrict for production)
+   - Choose "Allow access from anywhere" for development
+   - For production with Vercel, use the following settings:
+     - Obtain Vercel's IP addresses from [Vercel's documentation](https://vercel.com/docs/concepts/edge-network/regions)
+     - Alternatively, add `0.0.0.0/0` to allow all connections 
+       (Note: This is less secure but may be needed for serverless functions with dynamic IPs)
 
 5. **Get Connection String**
    - Click on "Connect"
@@ -235,11 +259,16 @@ Before deploying your application, follow these steps:
    - Copy the connection string
    - Replace `<password>` with your database user's password
 
-6. **Update Your Application**
-   - Add the connection string to your backend `.env` file:
-     ```
-     MONGODB_URI=mongodb+srv://username:<password>@cluster0.mongodb.net/linkedin-networker?retryWrites=true&w=majority
-     ```
+6. **Optimize Connection String for Serverless**
+   - Add the following parameters to your connection string for better performance:
+   ```
+   MONGODB_URI=mongodb+srv://username:<password>@cluster0.mongodb.net/linkedin-networker?retryWrites=true&w=majority&connectTimeoutMS=30000&socketTimeoutMS=45000
+   ```
+   - `connectTimeoutMS=30000`: Gives more time to establish initial connection
+   - `socketTimeoutMS=45000`: Gives more time for operations before timeout
+
+7. **Update Your Application**
+   - Add the optimized connection string to your backend `.env` file
 
 ## Environment Variables
 
@@ -317,8 +346,19 @@ FRONTEND_URL=https://your-frontend-url.com
    - Check if your IP address is whitelisted in MongoDB Atlas
    - Verify your connection string and credentials
    - Test the connection locally before deploying
+   - For serverless functions, ensure your MongoDB connection is optimized with:
+     - Connection pooling/caching
+     - Appropriate timeouts
+     - Error handling for connection failures
+     - Fallback mechanisms (like in-memory MongoDB)
 
-4. **Build Errors**
+4. **Vercel Serverless Function Timeouts**
+   - If functions are timing out, check:
+     - MongoDB connection code for proper timeout handling
+     - Vercel function settings (`maxDuration` and `memory` in vercel.json)
+     - MongoDB Atlas network settings to ensure Vercel can connect
+
+5. **Build Errors**
    - Review your build logs for any errors
    - Ensure all dependencies are correctly installed
    - Check for compatibility issues between packages

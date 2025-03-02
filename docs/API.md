@@ -51,6 +51,14 @@ Retrieves a list of all events.
 ]
 ```
 
+**Error Responses**:
+```json
+{
+  "error": "Error listing events",
+  "message": "Detailed error message"
+}
+```
+
 #### Get Event by ID
 
 ```
@@ -83,6 +91,35 @@ Retrieves a specific event by its ID.
 }
 ```
 
+**Error Responses**:
+```json
+{
+  "error": "Event not found"
+}
+```
+
+```json
+{
+  "error": "Error finding event",
+  "message": "Detailed error message"
+}
+```
+
+#### Get Event by Code
+
+```
+GET /api/events?code=EVTCON123
+```
+
+Retrieves a specific event by its unique code.
+
+**Parameters**:
+- `code`: The unique event code
+
+**Response**: Same as Get Event by ID
+
+**Error Responses**: Same as Get Event by ID
+
 #### Create Event
 
 ```
@@ -111,7 +148,34 @@ Creates a new event.
   "location": "Chicago, IL",
   "description": "Networking for marketing professionals",
   "organizer": "organizer@example.com",
+  "eventCode": "EVTCON123",
   "createdAt": "2025-03-02T10:30:00.000Z"
+}
+```
+
+**Error Responses**:
+
+For missing required fields:
+```json
+{
+  "error": "Missing required fields",
+  "requiredFields": ["name", "date", "location"] 
+}
+```
+
+For database connection issues:
+```json
+{
+  "error": "Database connection failed",
+  "message": "Connection refused"
+}
+```
+
+For other errors:
+```json
+{
+  "error": "Failed to create event",
+  "message": "Detailed error message"
 }
 ```
 
@@ -350,15 +414,27 @@ The API returns standard HTTP status codes:
 - `400 Bad Request`: The request was invalid or cannot be served
 - `404 Not Found`: The resource does not exist
 - `500 Internal Server Error`: Server-side error
+- `503 Service Unavailable`: Database connection issues
 
-Error responses include a message:
+Error responses include detailed information:
 
 ```json
 {
-  "status": "error",
-  "message": "Error details here"
+  "error": "Error type",
+  "message": "Detailed error message"
 }
 ```
+
+For database connection errors, a fallback to demo mode is available, which will be indicated in the response.
+
+## MongoDB Connection
+
+The application uses MongoDB for data storage with the following features:
+
+1. **Connection Pooling**: Reuses database connections for better performance in serverless environments
+2. **Timeouts**: Implements connection timeouts to prevent hanging requests
+3. **Error Handling**: Comprehensive error handling for database operations
+4. **Fallback Mode**: Falls back to in-memory MongoDB if Atlas connection fails
 
 ## Data Models
 
@@ -370,7 +446,10 @@ Error responses include a message:
   date: Date,                // Required
   location: String,          // Required
   description: String,       // Optional
-  organizer: String,         // Required (email)
+  organizer: String,         // Email of organizer
+  eventCode: String,         // Unique code for event registration (auto-generated)
+  qrCodeUrl: String,         // URL to QR code image (auto-generated)
+  isCompleted: Boolean,      // Whether the event is completed (default: false)
   createdAt: Date,           // Automatically set
   updatedAt: Date            // Automatically updated
 }
@@ -382,8 +461,8 @@ Error responses include a message:
 {
   name: String,              // Required
   email: String,             // Required
-  linkedinUrl: String,       // Optional
-  eventId: ObjectId,         // Required (reference to Event)
+  linkedinUrl: String,       // Required
+  eventId: String,           // Required (reference to Event)
   registeredAt: Date,        // Automatically set
   updatedAt: Date            // Automatically updated
 }

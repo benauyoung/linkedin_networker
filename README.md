@@ -10,12 +10,15 @@ A full-stack web application for LinkedIn networking events with QR codes. Built
 - **Attendee Information**: Collects name, email, and LinkedIn profile from attendees
 - **Post-Event Networking**: After the event, attendees receive emails with links to connect with other attendees
 - **LinkedIn Integration**: Easily connect with individual or all attendees via LinkedIn
+- **Robust MongoDB Integration**: Optimized database connections for serverless environments with auto-fallback to in-memory database
+- **Error Handling**: Comprehensive error handling with clear user feedback and fallback mechanisms
 
 ## Tech Stack
 
 - **Frontend**: React, React Router, Bootstrap, Axios
 - **Backend**: Node.js, Express
 - **Database**: MongoDB (with in-memory fallback)
+- **Deployment**: Vercel Serverless Functions
 - **QR Code**: qrcode.js
 - **Email**: Nodemailer
 
@@ -66,17 +69,17 @@ A full-stack web application for LinkedIn networking events with QR codes. Built
 
 ## Deployment Options
 
-### Option 1: Vercel + MongoDB Atlas (Easiest)
-- **Frontend**: Deploy to Vercel (free tier available)
+### Option 1: Vercel + MongoDB Atlas (Recommended)
+- **Frontend & API**: Deploy to Vercel (free tier available)
   - Connect your GitHub repository
-  - Set build command to `cd frontend && npm run build`
+  - Set build command to `npm run vercel-build`
   - Set output directory to `frontend/build`
-- **Backend**: Vercel Serverless Functions
-  - Move backend code to `/api` folder in your project
-  - Configure with vercel.json
+  - Add MongoDB connection string to environment variables
+  - Optimize for serverless with proper function settings in vercel.json
 - **Database**: MongoDB Atlas (free tier available)
   - Create a free cluster
-  - Update your MongoDB connection string in environment variables
+  - Configure network access for Vercel's IP ranges
+  - Use optimized connection string with proper timeout settings
 
 ### Option 2: Netlify + Render + MongoDB Atlas
 - **Frontend**: Deploy to Netlify (free tier available)
@@ -112,6 +115,15 @@ Detailed deployment instructions are available in the [DEPLOYMENT.md](./DEPLOYME
    - Attendees click the link in the email
    - They can see the list of all attendees
    - Connect with individual attendees or all attendees at once via LinkedIn
+
+## Database Architecture
+
+The application uses MongoDB with the following optimizations:
+
+1. **Connection Pooling**: Efficiently reuses database connections
+2. **Smart Timeout Handling**: Prevents hanging connections in serverless environments
+3. **Fallback Mechanism**: Automatically switches to in-memory MongoDB if Atlas connection fails
+4. **Error Handling**: Graceful error handling with appropriate user feedback
 
 ## Documentation
 
