@@ -6,35 +6,35 @@ const NavigationBar = () => {
   // Logo fallback handler
   const handleLogoError = (e) => {
     e.target.onerror = null;
-    e.target.src = 'https://via.placeholder.com/30x30?text=LN';
+    e.target.src = 'https://via.placeholder.com/30x30?text=EC';
   };
 
   return (
     <>
-      <div className="brand-header" style={{ backgroundColor: '#FF4D4D' }}>
+      <div className="brand-header" style={{ backgroundColor: '#2196F3' }}>
         <img 
           src="/assets/walking-logo.svg" 
-          alt="LinkedIn Networker Logo" 
+          alt="EVENT CONNECT Logo" 
           className="event-connect-logo"
           onError={handleLogoError}
         />
-        LINKEDIN NETWORKER
+        EVENT CONNECT
       </div>
       <Navbar expand="lg" className="navbar-custom shadow-sm">
         <Container>
           <Navbar.Brand as={Link} to="/">
             <img 
               src="/assets/walking-logo.svg" 
-              alt="LinkedIn Networker Logo" 
-              className="logo-small"
+              alt="EVENT CONNECT Logo" 
+              className="d-inline-block align-top"
               style={{ width: '30px', marginRight: '10px' }}
               onError={handleLogoError}
             />
-            <span className="logo-text">LinkedIn Networker</span>
+            <span className="d-none d-sm-inline">EVENT CONNECT</span>
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
+            <Nav className="ms-auto">
               <Nav.Link as={Link} to="/">Home</Nav.Link>
               <Nav.Link as={Link} to="/create-event">Create Event</Nav.Link>
             </Nav>
