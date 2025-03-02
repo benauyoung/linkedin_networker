@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { connectToDatabase } from './_utils/mongodb.js';
+import completeEventHandler from './complete-event.js';
 
 // Create Express app
 const app = express();
@@ -37,6 +38,11 @@ const EventSchema = new mongoose.Schema({
 // Configure API routes
 async function setupApiRoutes(req, res) {
   try {
+    // Handle complete-event endpoint
+    if (req.url === '/api/complete-event') {
+      return await completeEventHandler(req, res);
+    }
+    
     // Connect to the database
     const dbConnection = await connectToDatabase();
     const { Event } = dbConnection;
@@ -107,7 +113,8 @@ async function setupApiRoutes(req, res) {
         version: '1.0.0',
         endpoints: [
           '/api/events - Get all events (GET) or create a new event (POST)',
-          '/api/events/:id - Get event by ID (coming soon)'
+          '/api/events/:id - Get event by ID (coming soon)',
+          '/api/complete-event - Mark an event as completed and send follow-up emails (POST)'
         ]
       });
     }
