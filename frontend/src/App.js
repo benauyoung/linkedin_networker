@@ -7,6 +7,7 @@ import CreateEvent from './components/CreateEvent';
 import EventDetails from './components/EventDetails';
 import RegistrationForm from './components/RegistrationForm';
 import AttendeeList from './components/AttendeeList';
+import axios from './axiosConfig';
 import './App.css';
 
 // Error Boundary Component
@@ -48,12 +49,29 @@ class ErrorBoundary extends React.Component {
 
 function App() {
   const [appReady, setAppReady] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
 
   useEffect(() => {
     // Set app as ready after a small delay to ensure all components are loaded
     const timer = setTimeout(() => {
       setAppReady(true);
     }, 1500); // Increased delay to ensure everything loads
+    
+    // Check server connectivity
+    const checkConnection = async () => {
+      try {
+        await axios.get('/events');
+        setDemoMode(false);
+        setConnectionError(false);
+      } catch (error) {
+        console.log('Unable to connect to the server. Running in demo mode.');
+        setDemoMode(true);
+        setConnectionError(true);
+      }
+    };
+    
+    checkConnection();
     
     return () => clearTimeout(timer);
   }, []);
@@ -73,11 +91,18 @@ function App() {
   }
 
   return (
-    <ErrorBoundary>
-      <Router>
+    <Router>
+      <ErrorBoundary>
         <div className="app-container">
           <NavigationBar />
-          <Container className="py-4">
+          
+          {demoMode && (
+            <Alert variant="warning" className="text-center mb-0">
+              <strong>Demo Mode Active:</strong> Unable to connect to the server. Your data will not be saved.
+            </Alert>
+          )}
+          
+          <Container className="mt-4 main-content">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/create-event" element={<CreateEvent />} />
@@ -88,8 +113,8 @@ function App() {
             </Routes>
           </Container>
         </div>
-      </Router>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </Router>
   );
 }
 

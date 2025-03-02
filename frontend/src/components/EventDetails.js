@@ -20,6 +20,12 @@ const EventDetails = () => {
     if (location.state && location.state.event) {
       setEvent(location.state.event);
       setAttendees([]); // No attendees for a new event
+      
+      // If this is a demo mode event, show a notice
+      if (location.state.demoMode) {
+        setError('Demo Mode: This event data is not saved to a database and will be lost on page refresh.');
+      }
+      
       setLoading(false);
       return;
     }
@@ -51,10 +57,12 @@ const EventDetails = () => {
             date: eventDate.toISOString(),
             location: 'Virtual Event',
             description: 'This is a demonstration event while the API is being configured.',
-            eventCode: `DEMO${Math.floor(Math.random() * 900) + 100}`
+            eventCode: `DEMO${Math.floor(Math.random() * 900) + 100}`,
+            qrCodeUrl: '',
+            isDemoEvent: true
           });
           setAttendees([]);
-          setError('Using demo mode: This event data is not saved to a database.');
+          setError('Demo Mode: This event data is not saved to a database and will be lost on page refresh.');
         } else {
           setError('Failed to load event details. The event may not exist or the server is unavailable.');
         }

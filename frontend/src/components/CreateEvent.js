@@ -30,42 +30,54 @@ const CreateEvent = () => {
     setLoading(true);
     setError(null);
 
-    try {
-      // Add eventCode generation on the client side
-      const eventCode = 'EVT' + Math.random().toString(36).substring(2, 8).toUpperCase();
-      const eventData = {
-        ...formData,
-        eventCode,
-        _id: 'evt' + Date.now() // Generate a fake ID for mock data
-      };
+    // Generate event data with unique identifiers
+    const eventCode = 'EVT' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const eventId = 'evt' + Date.now();
+    const eventData = {
+      ...formData,
+      eventCode,
+      _id: eventId,
+      date: formData.date || new Date().toISOString().split('T')[0], // Default to today if empty
+      createdAt: new Date().toISOString()
+    };
 
+    try {
+      // Try to send to server
       const response = await axios.post('/events', eventData);
       setLoading(false);
       
-      if (response.data && response.data._id) {
-        navigate(`/event/${response.data._id}`);
-      } else {
-        // If the server doesn't return data, use our generated data
-        setCreatedEvent(eventData);
-        navigate(`/event/${eventData._id}`);
-      }
+      // If successful, navigate to the event details page with server data
+      navigate(`/event/${response.data._id}`, { 
+        state: { event: response.data } 
+      });
+      
     } catch (err) {
       console.error('Error creating event:', err);
       
-      // Create a fallback event in case of API error
+      // In case of error, generate QR code data URL for the fallback event
+      const registrationUrl = `${window.location.origin}/register/${eventCode}`;
+      const canvas = document.createElement('canvas');
+      await new Promise(resolve => {
+        QRCode.toCanvas(canvas, registrationUrl, { width: 200 }, resolve);
+      });
+      const qrCodeDataUrl = canvas.toDataURL();
+      
+      // Create complete fallback event with QR code
       const fallbackEvent = {
-        ...formData,
-        eventCode: 'EVT' + Math.random().toString(36).substring(2, 8).toUpperCase(),
-        _id: 'evt' + Date.now()
+        ...eventData,
+        qrCodeUrl: qrCodeDataUrl,
+        isDemoEvent: true
       };
       
       setLoading(false);
-      setError('Could not connect to server. Creating event in demo mode.');
+      setError('Unable to connect to server. Created event in demo mode - your data will not be saved to a database.');
       
-      // Add a delay to show the error message before redirecting
+      // Wait a moment to show the message before redirecting
       setTimeout(() => {
-        navigate(`/event/${fallbackEvent._id}`, { state: { event: fallbackEvent } });
-      }, 1500);
+        navigate(`/event/${fallbackEvent._id}`, { 
+          state: { event: fallbackEvent, demoMode: true } 
+        });
+      }, 2000);
     }
   };
 
