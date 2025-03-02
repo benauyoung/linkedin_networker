@@ -36,17 +36,27 @@ export default async function handler(req, res) {
     // Handle different HTTP methods
     if (req.method === 'GET') {
       // Get event ID or code from query parameters if provided
-      const { id, code } = req.query;
+      const { id, eventCode } = req.query;
       
-      if (id) {
-        // Get specific event by ID
+      if (id || eventCode) {
+        // Get specific event by ID or code
         try {
-          // First try to find the event by MongoDB ID
-          let event = await Event.findById(id).catch(() => null);
+          let event = null;
           
-          // If not found by ID, try finding by eventCode 
-          if (!event) {
-            event = await Event.findOne({ eventCode: id });
+          // First try to find the event by MongoDB ID if provided
+          if (id) {
+            try {
+              event = await Event.findById(id).catch(() => null);
+            } catch (error) {
+              console.log('Error finding event by ID:', error);
+            }
+          }
+          
+          // If not found by ID or if eventCode provided, try finding by eventCode
+          if (!event && (eventCode || id)) {
+            const codeToUse = eventCode || id;
+            console.log('Looking up event by code:', codeToUse);
+            event = await Event.findOne({ eventCode: codeToUse });
           }
           
           if (!event) {
@@ -56,19 +66,7 @@ export default async function handler(req, res) {
           console.log('Event found:', event);
           return res.status(200).json(event);
         } catch (err) {
-          console.error('Error finding event by ID:', err);
-          return res.status(500).json({ error: 'Error finding event' });
-        }
-      } else if (code) {
-        // Get specific event by code
-        try {
-          const event = await Event.findOne({ eventCode: code });
-          if (!event) {
-            return res.status(404).json({ error: 'Event not found' });
-          }
-          return res.status(200).json(event);
-        } catch (err) {
-          console.error('Error finding event by code:', err);
+          console.error('Error finding event by ID or code:', err);
           return res.status(500).json({ error: 'Error finding event' });
         }
       } else {

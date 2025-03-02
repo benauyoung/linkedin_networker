@@ -30,8 +30,38 @@ export default async function handler(req, res) {
       
       console.log('Fetching attendees for event:', eventId);
       
-      // Return attendees for the specific event
-      const attendees = await Attendee.find({ eventId }).sort({ registeredAt: -1 });
+      // Get the event to find its event code
+      let event = null;
+      let attendees = [];
+      
+      try {
+        // Try to find by MongoDB ID
+        event = await Event.findById(eventId).catch(() => null);
+      } catch (err) {
+        console.log('Not a valid MongoDB ID, trying eventCode...');
+      }
+      
+      // If not found by _id, try to find by eventCode
+      if (!event) {
+        event = await Event.findOne({ eventCode: eventId });
+      }
+      
+      if (event) {
+        // Look up by both event ID and event code
+        attendees = await Attendee.find({ 
+          $or: [
+            { eventId: eventId },
+            { eventId: event._id.toString() },
+            { eventId: event.eventCode }
+          ]
+        }).sort({ registeredAt: -1 });
+        
+        console.log(`Found ${attendees.length} attendees for event: ${event.name}`);
+      } else {
+        // If event not found, just search by the provided eventId
+        attendees = await Attendee.find({ eventId }).sort({ registeredAt: -1 });
+      }
+      
       return res.status(200).json(attendees);
     } else if (req.method === 'POST') {
       try {

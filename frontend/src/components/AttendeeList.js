@@ -15,11 +15,11 @@ const AttendeeList = () => {
     const fetchData = async () => {
       try {
         // Fetch event details
-        const eventResponse = await axios.get(`/api/events/${eventId}`);
+        const eventResponse = await axios.get(`/events?id=${eventId}`);
         setEvent(eventResponse.data);
         
         // Fetch attendees
-        const attendeesResponse = await axios.get(`/api/events/${eventId}/attendees`);
+        const attendeesResponse = await axios.get(`/attendees?eventId=${eventId}`);
         setAttendees(attendeesResponse.data);
         
         setLoading(false);

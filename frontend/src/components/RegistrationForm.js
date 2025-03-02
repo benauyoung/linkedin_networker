@@ -22,7 +22,8 @@ const RegistrationForm = () => {
     const fetchEvent = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`/events?id=${eventCode}`);
+        console.log('Fetching event using event code:', eventCode);
+        const response = await axios.get(`/events?eventCode=${eventCode}`);
         if (response.data) {
           console.log('Event found for registration:', response.data);
           setEvent(response.data);

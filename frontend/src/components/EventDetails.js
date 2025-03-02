@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
-import { Card, Button, Alert, Modal, Container, Spinner } from 'react-bootstrap';
+import { Card, Button, Alert, Modal, Container, Spinner, Table } from 'react-bootstrap';
 import QRCode from 'qrcode.react';
 import axios from '../axiosConfig';
 import moment from 'moment';
@@ -16,6 +16,7 @@ const EventDetails = () => {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [completingEvent, setCompletingEvent] = useState(false);
   const [completeResult, setCompleteResult] = useState(null);
+  const [showAttendeesModal, setShowAttendeesModal] = useState(false);
   
   useEffect(() => {
     // Check if we have passed event data from the state (from CreateEvent)
@@ -172,7 +173,7 @@ const EventDetails = () => {
                 <span className="event-code">{event.eventCode || 'CODE123'}</span>
               </div>
               <QRCode 
-                value={`${window.location.origin}/register/${event.eventCode || 'CODE123'}`}
+                value={window.location.origin + `/register/${event.eventCode || 'CODE123'}`}
                 size={100}
                 level="H"
                 renderAs="svg"
@@ -192,11 +193,7 @@ const EventDetails = () => {
                 <i className="bi bi-people me-1"></i> {attendees.length} Attendees
               </span>
               <Button 
-                onClick={() => {
-                  // Open a modal or implement view functionality
-                  console.log('Viewing attendees:', attendees);
-                  alert(`${attendees.length} attendees registered for this event: ${attendees.map(a => a.name).join(', ')}`);
-                }}
+                onClick={() => setShowAttendeesModal(true)}
                 variant="link"
                 className="p-0 ms-2"
                 style={{ color: 'var(--bs-danger)' }}
@@ -258,6 +255,36 @@ const EventDetails = () => {
             ) : (
               'Complete Event'
             )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      
+      {/* Attendees Modal */}
+      <Modal show={showAttendeesModal} onHide={() => setShowAttendeesModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Attendees</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Table striped bordered hover>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+              </tr>
+            </thead>
+            <tbody>
+              {attendees.map((attendee, index) => (
+                <tr key={index}>
+                  <td>{attendee.name}</td>
+                  <td>{attendee.email}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowAttendeesModal(false)}>
+            Close
           </Button>
         </Modal.Footer>
       </Modal>
