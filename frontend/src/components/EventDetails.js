@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Card, Button, Alert, Modal, Container, Spinner, Table } from 'react-bootstrap';
 import QRCode from 'qrcode.react';
 import axios from '../axiosConfig';
@@ -135,7 +135,7 @@ const EventDetails = () => {
         <Alert variant="danger">
           Event not found or has been deleted.
           <div className="mt-3">
-            <Link to="/" className="btn btn-outline-danger">Return to Home</Link>
+            <Button variant="outline-danger" onClick={() => navigate('/')}>Return to Home</Button>
           </div>
         </Alert>
       </Container>
@@ -173,7 +173,7 @@ const EventDetails = () => {
                 <span className="event-code">{event.eventCode || 'CODE123'}</span>
               </div>
               <QRCode 
-                value={window.location.origin + `/register/${event.eventCode || 'CODE123'}`}
+                value={`https://linkedin-networker-74zawzz0f-bens-projects-6fbea0fe.vercel.app/register/${event.eventCode || 'CODE123'}`}
                 size={100}
                 level="H"
                 renderAs="svg"
@@ -205,8 +205,10 @@ const EventDetails = () => {
               <Button
                 variant="outline-danger"
                 className="me-2"
-                as={Link}
-                to={`/register/${event.eventCode || 'CODE123'}`}
+                as="a"
+                href={`https://linkedin-networker-74zawzz0f-bens-projects-6fbea0fe.vercel.app/register/${event.eventCode || 'CODE123'}`}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Registration Page
               </Button>
