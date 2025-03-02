@@ -4,10 +4,10 @@
   "description": "LinkedIn networking application with QR code registration",
   "main": "backend/server.js",
   "scripts": {
-    "start": "node backend/server.js",
-    "build": "cd frontend && cross-env CI=false npm install && cross-env CI=false npm run build",
-    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\"",
-    "vercel-build": "cd frontend && cross-env CI=false npm install && cross-env CI=false npm run build"
+    "dev": "cd frontend && npm start",
+    "vercel-build": "cd frontend && npm install && npm run build",
+    "build": "cd frontend && npm run build",
+    "start": "node api/index.js"
   },
   "engines": {
     "node": ">=14.0.0"

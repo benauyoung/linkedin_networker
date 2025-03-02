@@ -1,17 +1,27 @@
 import axios from 'axios';
 
-// Determine the base URL based on the environment
+// Get the base URL depending on the environment
 const getBaseUrl = () => {
-  // Check if we're in production
-  if (process.env.NODE_ENV === 'production') {
-    // Use our API route or fallback to a mock API
-    return process.env.REACT_APP_API_URL || '';
+  // For vercel.app deployment
+  if (window.location.hostname.includes('vercel.app')) {
+    // Use relative path directly on Vercel
+    return '';
   }
-  // In development, use the proxy setup
-  return 'http://localhost:5000';
+  
+  // For local development 
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:5000';
+  }
+  
+  // Default case - use the environment variable if defined
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // Fall back to an empty string (same-origin requests)
+  return '';
 };
 
-// Create axios instance with base URL that works in both development and production
 const instance = axios.create({
   baseURL: getBaseUrl(),
   timeout: 10000, // 10 second timeout
@@ -20,39 +30,51 @@ const instance = axios.create({
   }
 });
 
-// Add request interceptor to modify requests before they are sent
+// Add a request interceptor
 instance.interceptors.request.use(
-  config => {
-    console.log('API Request:', config.method?.toUpperCase(), config.url);
+  (config) => {
+    // Log only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API Request:', config.method.toUpperCase(), config.url);
+    }
     return config;
   },
-  error => {
-    console.error('Request Error:', error);
+  (error) => {
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
 
-// Add interceptor to handle errors
+// Add a response interceptor
 instance.interceptors.response.use(
-  response => response,
-  error => {
-    console.error('API Error:', error.message || 'Unknown error');
+  (response) => {
+    return response;
+  },
+  (error) => {
+    console.error('Response error:', error.message);
     
-    // If the error is a network error, we could be offline or the API is down
-    if (error.message === 'Network Error') {
-      console.log('Network error detected - API may be unavailable');
-    }
+    // Create a more user-friendly error message
+    let errorMessage = 'An unexpected error occurred. Please try again later.';
     
-    // Log additional details for debugging
     if (error.response) {
       // The request was made and the server responded with a status code
       // that falls out of the range of 2xx
-      console.error('Error Data:', error.response.data);
-      console.error('Error Status:', error.response.status);
+      console.error('Error status:', error.response.status);
+      console.error('Error data:', error.response.data);
+      
+      if (error.response.status === 404) {
+        errorMessage = 'The requested resource was not found.';
+      } else if (error.response.status === 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
     } else if (error.request) {
       // The request was made but no response was received
-      console.error('No response received');
+      console.error('No response received:', error.request);
+      errorMessage = 'No response from server. Please check your network connection.';
     }
+    
+    // Attach the user-friendly message to the error
+    error.userMessage = errorMessage;
     
     return Promise.reject(error);
   }

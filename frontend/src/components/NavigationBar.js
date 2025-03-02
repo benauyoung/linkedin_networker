@@ -11,7 +11,7 @@ const NavigationBar = () => {
 
   return (
     <>
-      <div className="brand-header" style={{ backgroundColor: '#2196F3' }}>
+      <div className="brand-header">
         <img 
           src="/assets/walking-logo.svg" 
           alt="EVENT CONNECT Logo" 
@@ -30,13 +30,13 @@ const NavigationBar = () => {
               style={{ width: '30px', marginRight: '10px' }}
               onError={handleLogoError}
             />
-            <span className="d-none d-sm-inline">EVENT CONNECT</span>
+            <span style={{ color: '#FF4D4D' }} className="d-none d-sm-inline">EVENT CONNECT</span>
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto">
-              <Nav.Link as={Link} to="/">Home</Nav.Link>
-              <Nav.Link as={Link} to="/create-event">Create Event</Nav.Link>
+              <Nav.Link as={Link} to="/" style={{ color: '#FF4D4D' }}>Home</Nav.Link>
+              <Nav.Link as={Link} to="/create-event" style={{ color: '#FF4D4D' }}>Create Event</Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Container>

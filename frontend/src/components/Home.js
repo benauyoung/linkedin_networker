@@ -12,12 +12,13 @@ const Home = () => {
     const fetchEvents = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/events');
+        // Try to fetch from the API
+        const response = await axios.get('/api/events');
         setEvents(response.data);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching events:', err);
-        setError('Failed to load events. The API might be unavailable.');
+        
         // Set mock data for demonstration when API is unavailable
         setEvents([
           {
@@ -26,13 +27,27 @@ const Home = () => {
             date: '2023-04-15T00:00:00.000Z',
             location: 'Virtual Event',
             description: 'This is a demonstration event while the API is being configured.'
+          },
+          {
+            _id: 'demo2',
+            name: 'Networking Mixer',
+            date: '2023-05-20T00:00:00.000Z',
+            location: 'San Francisco, CA',
+            description: 'Connect with professionals in your industry at our monthly networking mixer.'
           }
         ]);
+        
+        setError('Unable to connect to the server. Showing demo content instead.');
         setLoading(false);
       }
     };
 
-    fetchEvents();
+    // Add a small delay to ensure components are mounted
+    const timer = setTimeout(() => {
+      fetchEvents();
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, []);
 
   if (loading) {
@@ -41,15 +56,14 @@ const Home = () => {
         <Spinner animation="border" role="status" variant="danger">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
-        <p className="mt-2">Loading events...</p>
       </div>
     );
   }
 
   return (
-    <Container className="home-container">
+    <Container className="my-4">
       <div className="welcome-header">
-        <h1>Welcome to LinkedIn Networker</h1>
+        <h1>Welcome to EVENT CONNECT</h1>
         <p>Create and manage professional networking events, collect LinkedIn profiles from attendees</p>
       </div>
 
@@ -58,8 +72,12 @@ const Home = () => {
           <Card.Body>
             <img 
               src="/assets/walking-logo.svg" 
-              alt="LinkedIn Networker Logo" 
+              alt="EVENT CONNECT Logo" 
               style={{ width: '60px', marginBottom: '15px' }} 
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://via.placeholder.com/60x60?text=EC';
+              }}
             />
             <Card.Title>Ready to start networking?</Card.Title>
             <Card.Text>

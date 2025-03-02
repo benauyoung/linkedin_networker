@@ -34,7 +34,7 @@ class ErrorBoundary extends React.Component {
             The application encountered an error. Please try refreshing the page.
           </Alert>
           <button
-            className="btn btn-primary mt-3"
+            className="btn btn-danger mt-3"
             onClick={() => window.location.href = '/'}
           >
             Go Home
@@ -53,16 +53,17 @@ function App() {
     // Set app as ready after a small delay to ensure all components are loaded
     const timer = setTimeout(() => {
       setAppReady(true);
-    }, 100);
+    }, 1500); // Increased delay to ensure everything loads
     
     return () => clearTimeout(timer);
   }, []);
 
-  if (!appReady) {
+  // Prevent hydration errors by rendering a simple loading state initially
+  if (typeof window !== 'undefined' && !appReady) {
     return (
       <Container className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
         <div className="text-center">
-          <h3 className="text-primary mb-3">EVENT CONNECT</h3>
+          <h3 className="text-danger mb-3">EVENT CONNECT</h3>
           <div className="spinner-border text-danger" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
@@ -74,17 +75,19 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <NavigationBar />
-        <Container className="py-4">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/create-event" element={<CreateEvent />} />
-            <Route path="/event/:id" element={<EventDetails />} />
-            <Route path="/register/:eventCode" element={<RegistrationForm />} />
-            <Route path="/attendees/:eventId" element={<AttendeeList />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Container>
+        <div className="app-container">
+          <NavigationBar />
+          <Container className="py-4">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/create-event" element={<CreateEvent />} />
+              <Route path="/event/:id" element={<EventDetails />} />
+              <Route path="/register/:eventCode" element={<RegistrationForm />} />
+              <Route path="/attendees/:eventId" element={<AttendeeList />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Container>
+        </div>
       </Router>
     </ErrorBoundary>
   );

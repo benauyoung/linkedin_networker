@@ -10,7 +10,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #0056b3 !important; /* Primary blue instead of red to match requested branding */
+  background-color: #FF4D4D !important; /* Red theme for branding */
   color: white;
   padding: 10px 0;
   font-weight: bold;
@@ -42,23 +42,23 @@ body {
 }
 
 .card-title {
-  color: #0056b3; /* Primary blue */
+  color: #FF4D4D; /* Red theme */
   font-weight: bold;
 }
 
 /* Button styling */
 .btn-primary {
-  background-color: #0056b3; /* Primary blue */
-  border-color: #0056b3;
+  background-color: #FF4D4D; /* Red theme */
+  border-color: #FF4D4D;
 }
 
 .btn-primary:hover {
-  background-color: #004494;
-  border-color: #004494;
+  background-color: #ff3333;
+  border-color: #ff3333;
 }
 
 .btn-danger {
-  background-color: #ff4d4d; /* Red for the walking logo */
+  background-color: #ff4d4d;
   border-color: #ff4d4d;
 }
 
@@ -74,7 +74,7 @@ body {
 }
 
 .welcome-header h1 {
-  color: #0056b3;
+  color: #FF4D4D; /* Red theme */
   font-weight: 700;
   margin-bottom: 0.5rem;
 }
