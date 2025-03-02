@@ -38,6 +38,30 @@ export default function handler(req, res) {
     }
   ];
   
-  // Return the events data
-  res.status(200).json(events);
+  // Handle different HTTP methods
+  if (req.method === 'GET') {
+    // Return the events data for GET request
+    return res.status(200).json(events);
+  } else if (req.method === 'POST') {
+    try {
+      // Handle event creation
+      const eventData = req.body;
+      
+      // In a real API, we would save this to a database
+      // For now, we'll just echo it back with a generated ID if not provided
+      const newEvent = {
+        ...eventData,
+        _id: eventData._id || `evt${Date.now()}`,
+        eventCode: eventData.eventCode || `EVTCON${Math.floor(Math.random() * 900) + 100}`
+      };
+      
+      return res.status(201).json(newEvent);
+    } catch (error) {
+      console.error('Error creating event:', error);
+      return res.status(500).json({ error: 'Failed to create event' });
+    }
+  } else {
+    // Method not allowed
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 }

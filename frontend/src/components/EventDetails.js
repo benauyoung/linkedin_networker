@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Card, Button, Alert, Modal, Container, Spinner } from 'react-bootstrap';
 import QRCode from 'qrcode.react';
 import axios from '../axiosConfig';
@@ -8,6 +8,7 @@ import moment from 'moment';
 const EventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [event, setEvent] = useState(null);
   const [attendees, setAttendees] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +16,14 @@ const EventDetails = () => {
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   
   useEffect(() => {
+    // Check if we have passed event data from the state (from CreateEvent)
+    if (location.state && location.state.event) {
+      setEvent(location.state.event);
+      setAttendees([]); // No attendees for a new event
+      setLoading(false);
+      return;
+    }
+    
     const fetchEventDetails = async () => {
       try {
         // Fetch event details
@@ -29,159 +38,153 @@ const EventDetails = () => {
       } catch (err) {
         console.error('Error fetching event details:', err);
         
-        // Check if it's a demo event
-        if (id === 'demo1') {
-          // Set mock data for the demo event
+        // Check if it's a demo event or dynamically generated
+        if (id.startsWith('evt')) {
+          // Extract date and time from ID if it was dynamically generated
+          const idTime = id.replace(/^evt/, '');
+          const eventDate = new Date(parseInt(idTime, 10) || Date.now());
+          
+          // Set mock data for the event
           setEvent({
-            _id: 'demo1',
-            name: 'Demo Tech Conference',
-            date: '2023-04-15T00:00:00.000Z',
+            _id: id,
+            name: 'Demo Event',
+            date: eventDate.toISOString(),
             location: 'Virtual Event',
             description: 'This is a demonstration event while the API is being configured.',
-            registrationUrl: 'https://example.com/demo-event'
+            eventCode: `DEMO${Math.floor(Math.random() * 900) + 100}`
           });
-          setAttendees([
-            {
-              _id: 'demo-attendee-1',
-              name: 'John Doe',
-              email: 'john@example.com',
-              linkedinProfile: 'https://linkedin.com/in/johndoe',
-              eventId: 'demo1',
-              registrationDate: new Date().toISOString()
-            }
-          ]);
-          setError('Using demo data while API is being configured');
+          setAttendees([]);
+          setError('Using demo mode: This event data is not saved to a database.');
         } else {
-          setError('Failed to load event details. The API might be unavailable.');
+          setError('Failed to load event details. The event may not exist or the server is unavailable.');
         }
+        
         setLoading(false);
       }
     };
-
-    fetchEventDetails();
-  }, [id]);
-
-  const handleComplete = async () => {
-    if (error) {
-      navigate('/');
-      return;
-    }
     
-    try {
-      await axios.put(`/events/${id}/complete`);
-      setShowCompleteModal(true);
-    } catch (err) {
-      setError('Failed to complete the event. Try again later.');
-      console.error('Error completing event:', err);
-    }
+    fetchEventDetails();
+  }, [id, location.state]);
+  
+  const handleCompleteEvent = () => {
+    setShowCompleteModal(true);
   };
-
+  
+  const confirmCompleteEvent = () => {
+    // In a real app, we would call an API to mark the event as completed
+    setShowCompleteModal(false);
+    navigate('/');
+  };
+  
   if (loading) {
     return (
-      <Container className="d-flex justify-content-center mt-5">
-        <Spinner animation="border" role="status" variant="danger">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '300px' }}>
+        <Spinner animation="border" variant="danger" />
       </Container>
     );
   }
-
-  if (!event && !error) {
+  
+  if (!event) {
     return (
-      <Container className="mt-5">
-        <Alert variant="danger">Event not found. It may have been deleted.</Alert>
-        <Link to="/" className="btn btn-primary mt-3">Back to Events</Link>
+      <Container>
+        <Alert variant="danger">
+          Event not found or an error occurred.
+          <div className="mt-3">
+            <Link to="/" className="btn btn-outline-danger">Return to Home</Link>
+          </div>
+        </Alert>
       </Container>
     );
   }
-
+  
+  // Format event date
+  const eventDate = moment(event.date).format('MMMM D, YYYY');
+  
   return (
-    <Container className="my-4">
-      {error && (
-        <Alert variant="warning" className="my-3">
-          {error}
-          {id === 'demo1' && <div><small>Showing demo content for preview.</small></div>}
-        </Alert>
-      )}
-
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1 className="mb-0">{event?.name || 'Event Details'}</h1>
-        <Link to="/" className="btn btn-outline-primary">Back to Events</Link>
-      </div>
+    <Container className="py-4">
+      {error && <Alert variant="warning">{error}</Alert>}
       
-      <Card className="mb-4">
+      <Card className="shadow-sm mb-4">
         <Card.Body>
-          <Card.Title>Event Information</Card.Title>
-          <Card.Text>
-            <strong>Date:</strong> {event?.date ? moment(event.date).format('MMMM D, YYYY') : 'N/A'}<br />
-            <strong>Location:</strong> {event?.location || 'N/A'}<br />
-            <strong>Description:</strong> {event?.description || 'No description provided.'}
-          </Card.Text>
-          <div className="d-flex justify-content-between mt-4">
-            <Button 
-              variant="danger" 
-              onClick={handleComplete}
-              disabled={error && id !== 'demo1'}
-            >
-              Mark as Complete
-            </Button>
-            
+          <div className="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h2 className="card-title mb-1">{event.name}</h2>
+              <p className="text-muted mb-0">
+                <i className="bi bi-calendar me-1"></i> {eventDate}
+              </p>
+              <p className="text-muted mb-0">
+                <i className="bi bi-geo-alt me-1"></i> {event.location}
+              </p>
+            </div>
             <div className="text-center">
-              <h5>Registration QR Code</h5>
-              {event?.registrationUrl ? (
-                <QRCode value={event.registrationUrl} size={150} />
-              ) : (
-                <div className="border d-flex justify-content-center align-items-center" style={{ width: 150, height: 150 }}>
-                  <span className="text-muted">No URL available</span>
-                </div>
-              )}
+              <div className="mb-2">
+                <small className="d-block text-muted mb-1">Event Code</small>
+                <span className="event-code">{event.eventCode || 'CODE123'}</span>
+              </div>
+              <QRCode 
+                value={`${window.location.origin}/register/${event.eventCode || 'CODE123'}`}
+                size={100}
+                level="H"
+                renderAs="svg"
+              />
+            </div>
+          </div>
+          
+          <p className="event-description">
+            {event.description || 'No description provided.'}
+          </p>
+          
+          <hr />
+          
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <span className="text-muted">
+                <i className="bi bi-people me-1"></i> {attendees.length} Attendees
+              </span>
+              <Button 
+                as={Link} 
+                to={`/attendees/${event._id}`}
+                variant="link"
+                className="p-0 ms-2"
+                style={{ color: 'var(--bs-danger)' }}
+              >
+                View List
+              </Button>
+            </div>
+            <div>
+              <Button
+                variant="outline-danger"
+                className="me-2"
+                as={Link}
+                to={`/register/${event.eventCode || 'CODE123'}`}
+              >
+                Registration Page
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleCompleteEvent}
+              >
+                Complete Event
+              </Button>
             </div>
           </div>
         </Card.Body>
       </Card>
       
-      <h2>Attendees ({attendees.length})</h2>
-      {attendees.length === 0 ? (
-        <Alert variant="info">No attendees have registered for this event yet.</Alert>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-striped">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>LinkedIn Profile</th>
-                <th>Registration Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {attendees.map(attendee => (
-                <tr key={attendee._id}>
-                  <td>{attendee.name}</td>
-                  <td>{attendee.email}</td>
-                  <td>
-                    <a href={attendee.linkedinProfile} target="_blank" rel="noopener noreferrer">
-                      View Profile
-                    </a>
-                  </td>
-                  <td>{moment(attendee.registrationDate).format('MMM D, YYYY')}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      
+      {/* Complete Event Modal */}
       <Modal show={showCompleteModal} onHide={() => setShowCompleteModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Event Completed</Modal.Title>
+          <Modal.Title>Complete Event</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>This event has been marked as complete. Thank you for using LinkedIn Networker!</p>
+          Are you sure you want to complete this event? This will mark the event as finished.
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={() => navigate('/')}>
-            Return to Events
+          <Button variant="secondary" onClick={() => setShowCompleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmCompleteEvent}>
+            Complete Event
           </Button>
         </Modal.Footer>
       </Modal>
