@@ -1,0 +1,17 @@
+{
+  "name": "linkedin-networker",
+  "version": "1.0.0",
+  "description": "LinkedIn networking application with QR code registration",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "build": "cd frontend && npm install && npm run build",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm start\""
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "concurrently": "^7.0.0"
+  }
+}

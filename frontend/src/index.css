@@ -1,0 +1,272 @@
+:root {
+  --primary-color: #FF4D4D; /* Red from logo */
+  --secondary-color: #0072b1; /* LinkedIn blue as secondary */
+  --light-gray: #f8f9fa;
+  --dark-gray: #343a40;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--light-gray);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.brand-header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-custom {
+  background-color: white;
+}
+
+.logo-small {
+  height: 30px;
+  margin-right: 10px;
+}
+
+.event-connect-logo {
+  height: 30px;
+  margin-right: 10px;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+}
+
+.registration-form {
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.logo-text {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.section-header {
+  margin: 2rem 0;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+}
+
+.section-header h2 {
+  margin-bottom: 0;
+  margin-left: 0.5rem;
+}
+
+.card-form {
+  max-width: 700px;
+  margin: 0 auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  color: var(--primary-color);
+}
+
+.create-event-btn {
+  background-color: var(--primary-color);
+  border: none;
+  color: white;
+  padding: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.create-event-btn:hover {
+  background-color: #E04141;
+}
+
+.qr-code-scan-box {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: var(--light-gray);
+  border-radius: 4px;
+}
+
+.scan-text {
+  font-size: 0.8rem;
+  color: var(--dark-gray);
+  margin-bottom: 0.5rem;
+}
+
+/* Event list styles */
+.event-card {
+  margin-bottom: 1.5rem;
+  transition: transform 0.2s;
+  border-top: 3px solid var(--primary-color);
+}
+
+.event-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+}
+
+.event-details h2 {
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+}
+
+.event-info-section {
+  margin-bottom: 2rem;
+}
+
+.qr-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.attendee-table th {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.linkedin-icon {
+  color: var(--secondary-color);
+  margin-left: 0.5rem;
+}
+
+/* Event details page */
+.event-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.event-actions {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Home page */
+.home-container {
+  padding: 2rem 0;
+}
+
+.welcome-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.welcome-header h1 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.create-event-card {
+  max-width: 600px;
+  margin: 0 auto 3rem;
+}
+
+.create-btn {
+  font-weight: bold;
+  padding: 0.75rem 2rem;
+}
+
+.events-section {
+  margin-top: 3rem;
+}
+
+.events-section h2 {
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5rem;
+}
+
+.event-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .event-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Success page */
+.success-container {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.success-icon {
+  font-size: 4rem;
+  color: #28a745;
+  margin-bottom: 1.5rem;
+}
+
+.section-divider {
+  margin: 2rem 0;
+  border-top: 1px solid #dee2e6;
+}
+
+/* LinkedIn specific styling */
+.linkedin-button {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+}
+
+.linkedin-button:hover {
+  background-color: #005582;
+  border-color: #005582;
+}
+
+.linkedin-profile-link {
+  color: var(--secondary-color);
+  text-decoration: none;
+}
+
+.linkedin-profile-link:hover {
+  text-decoration: underline;
+}
+
+/* Navigation improvements */
+.nav-link {
+  color: var(--dark-gray);
+  font-weight: 500;
+}
+
+.nav-link:hover {
+  color: var(--primary-color);
+}
+
+.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+}
