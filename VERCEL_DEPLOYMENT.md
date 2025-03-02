@@ -52,6 +52,12 @@ This guide will walk you through deploying your EVENT CONNECT application on Ver
    - Set the framework preset to "Other"
    - In the "Environment Variables" section, add:
      - `MONGODB_URI`: Your MongoDB Atlas connection string
+     - `EMAIL_HOST`: Your SMTP server (e.g., smtp.gmail.com)
+     - `EMAIL_PORT`: SMTP port (usually 587 for TLS)
+     - `EMAIL_USER`: Your email address
+     - `EMAIL_PASS`: Your email password or app password
+     - `EMAIL_FROM`: The sender email address (e.g., events@eventconnect.com)
+     - `EMAIL_SECURE`: Set to 'true' for port 465, 'false' for other ports
    - Keep all other default settings
    - Click "Deploy"
 
