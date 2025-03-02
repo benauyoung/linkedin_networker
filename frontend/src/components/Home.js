@@ -16,7 +16,18 @@ const Home = () => {
         setEvents(response.data);
         setLoading(false);
       } catch (err) {
-        setError('Failed to load events');
+        console.error('Error fetching events:', err);
+        setError('Failed to load events. The API might be unavailable.');
+        // Set mock data for demonstration when API is unavailable
+        setEvents([
+          {
+            _id: 'demo1',
+            name: 'Demo Tech Conference',
+            date: '2023-04-15T00:00:00.000Z',
+            location: 'Virtual Event',
+            description: 'This is a demonstration event while the API is being configured.'
+          }
+        ]);
         setLoading(false);
       }
     };
@@ -61,7 +72,12 @@ const Home = () => {
         </Card>
       </div>
 
-      {error && <Alert variant="danger">{error}</Alert>}
+      {error && (
+        <Alert variant="warning" className="my-3">
+          {error} <br />
+          <small>Showing demo content for preview.</small>
+        </Alert>
+      )}
 
       <div className="events-section">
         <h2>Your Events</h2>
