@@ -76,6 +76,12 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Log current path for debugging
+  useEffect(() => {
+    console.log('Current path:', window.location.pathname);
+    console.log('Full URL:', window.location.href);
+  }, []);
+
   // Prevent hydration errors by rendering a simple loading state initially
   if (typeof window !== 'undefined' && !appReady) {
     return (
@@ -88,6 +94,15 @@ function App() {
         </div>
       </Container>
     );
+  }
+
+  // Extract event code from URL if we're on a registration page
+  const registerPath = /\/register\/(.+)/;
+  const match = window.location.pathname.match(registerPath);
+  const eventCodeFromPath = match ? match[1] : null;
+  
+  if (eventCodeFromPath) {
+    console.log('Event code extracted from URL:', eventCodeFromPath);
   }
 
   return (
@@ -109,7 +124,20 @@ function App() {
               <Route path="/event/:id" element={<EventDetails />} />
               <Route path="/register/:eventCode" element={<RegistrationForm />} />
               <Route path="/attendees/:eventId" element={<AttendeeList />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              
+              {/* Add a catch-all route for any other path */}
+              <Route path="*" element={
+                <Container className="text-center py-5">
+                  <h2>Page Not Found</h2>
+                  <p>The page you are looking for does not exist.</p>
+                  <button 
+                    className="btn btn-danger mt-3"
+                    onClick={() => window.location.href = '/'}
+                  >
+                    Go to Homepage
+                  </button>
+                </Container>
+              } />
             </Routes>
           </Container>
         </div>

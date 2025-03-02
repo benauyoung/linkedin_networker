@@ -167,6 +167,40 @@ const RegistrationForm = () => {
   const showDebugPanel = process.env.NODE_ENV !== 'production' || debugInfo.errors.length > 0 || error;
 
   // Always show something, even if we're loading or have an error
+  const renderAppLogo = () => (
+    <div className="text-center mb-4">
+      {/* Try to load SVG from public folder, with inline SVG fallback */}
+      <div style={{ height: '40px', marginBottom: '8px', display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assets/walking-logo.svg" 
+          alt="EVENT CONNECT Logo" 
+          height="40"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            document.getElementById('fallback-svg').style.display = 'block';
+          }}
+        />
+        <svg 
+          id="fallback-svg" 
+          xmlns="http://www.w3.org/2000/svg" 
+          viewBox="0 0 50 50" 
+          width="40" 
+          height="40" 
+          style={{display: 'none'}}
+        >
+          <circle cx="25" cy="10" r="6" fill="#dc3545" />
+          <line x1="25" y1="16" x2="25" y2="30" stroke="#dc3545" stroke-width="3" />
+          <line x1="25" y1="20" x2="15" y2="18" stroke="#dc3545" stroke-width="3" />
+          <line x1="25" y1="20" x2="35" y2="18" stroke="#dc3545" stroke-width="3" />
+          <line x1="25" y1="30" x2="18" y2="42" stroke="#dc3545" stroke-width="3" />
+          <line x1="25" y1="30" x2="32" y2="42" stroke="#dc3545" stroke-width="3" />
+        </svg>
+      </div>
+      <h2 className="registration-title text-danger mb-0">EVENT CONNECT</h2>
+      <p className="text-muted">Event Registration</p>
+    </div>
+  );
+
   return (
     <Container className="py-4">
       {/* Debug panel - will display at the top */}
@@ -179,6 +213,7 @@ const RegistrationForm = () => {
             <h5>Registration Component Debug</h5>
             <p><strong>URL:</strong> {window.location.href}</p>
             <p><strong>Event Code from URL:</strong> {eventCode || 'None'}</p>
+            <p><strong>Browser:</strong> {navigator.userAgent}</p>
             <p><strong>Component State:</strong> {loading ? 'Loading' : error ? 'Error' : event ? 'Event Loaded' : 'No Event'}</p>
             
             {debugInfo.errors.length > 0 && (
@@ -212,16 +247,7 @@ const RegistrationForm = () => {
       ) : error && !event ? (
         <Card className="registration-form border border-danger">
           <Card.Body className="text-center">
-            <div className="text-center mb-4">
-              <img 
-                src="/assets/walking-logo.svg" 
-                alt="EVENT CONNECT Logo" 
-                height="40" 
-                className="mb-2"
-              />
-              <h2 className="registration-title text-danger mb-0">EVENT CONNECT</h2>
-              <p className="text-muted">Event Registration</p>
-            </div>
+            {renderAppLogo()}
             <Alert variant="danger">
               <h4>Error Loading Event</h4>
               <p>{error}</p>
@@ -238,16 +264,7 @@ const RegistrationForm = () => {
       ) : event ? (
         <Card className="registration-form border border-danger">
           <Card.Body>
-            <div className="text-center mb-4">
-              <img 
-                src="/assets/walking-logo.svg" 
-                alt="EVENT CONNECT Logo" 
-                height="40" 
-                className="mb-2"
-              />
-              <h2 className="registration-title text-danger mb-0">EVENT CONNECT</h2>
-              <p className="text-muted">Event Registration</p>
-            </div>
+            {renderAppLogo()}
 
             <div className="event-info mb-4">
               <h3>{event.name}</h3>
@@ -331,16 +348,7 @@ const RegistrationForm = () => {
       ) : (
         <Card className="registration-form border border-danger">
           <Card.Body className="text-center">
-            <div className="text-center mb-4">
-              <img 
-                src="/assets/walking-logo.svg" 
-                alt="EVENT CONNECT Logo" 
-                height="40" 
-                className="mb-2"
-              />
-              <h2 className="registration-title text-danger mb-0">EVENT CONNECT</h2>
-              <p className="text-muted">Event Registration</p>
-            </div>
+            {renderAppLogo()}
             <Alert variant="warning">
               <h4>No Event Found</h4>
               <p>We couldn't find the event you're looking for. Please check the URL and try again.</p>
